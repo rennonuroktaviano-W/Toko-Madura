@@ -4,6 +4,40 @@ import { requireAuth, unauthorized } from "@/lib/api-auth";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+export async function GET(request) {
+  const user = await requireAuth();
+  if (!user) return unauthorized();
+
+  const url = new URL(request.url);
+  const dari = url.searchParams.get("dari");
+  const sampai = url.searchParams.get("sampai");
+
+  const where = {};
+  if (dari) {
+    const start = new Date(`${dari}T00:00:00`);
+    if (!Number.isNaN(start.getTime())) {
+      where.tanggal = { ...(where.tanggal || {}), gte: start };
+    }
+  }
+  if (sampai) {
+    const end = new Date(`${sampai}T23:59:59.999`);
+    if (!Number.isNaN(end.getTime())) {
+      where.tanggal = { ...(where.tanggal || {}), lte: end };
+    }
+  }
+
+  const transaksis = await prisma.transaksi.findMany({
+    where,
+    include: {
+      kasir: { select: { id: true, nama: true } },
+      _count: { select: { items: true } },
+    },
+    orderBy: { tanggal: "desc" },
+    take: 200,
+  });
+  return Response.json(transaksis);
+}
+
 function generateNoTransaksi() {
   const now = new Date();
   const pad = (n) => String(n).padStart(2, "0");
