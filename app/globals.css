@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #fff7e6;
+  --foreground: #4a2c12;
 }
 
 @theme inline {
@@ -10,17 +10,44 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-baloo);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+@theme {
+  --color-warung-kuning: #fbbf24;
+  --color-warung-kuningtua: #f59e0b;
+  --color-warung-oranye: #f97316;
+  --color-warung-hijau: #14532d;
+  --color-warung-hijaumuda: #16a34a;
+  --color-warung-merah: #dc2626;
+  --color-warung-krem: #fff7e6;
+  --color-warung-coklat: #5b3a1e;
+  --color-warung-orenmuda: #ffedd5;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+/* Print: sembunyikan bagian selain area struk saat cetak */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #struk-area,
+  #struk-area * {
+    visibility: visible;
+  }
+  #struk-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 220px;
+    margin: 0;
+  }
 }
