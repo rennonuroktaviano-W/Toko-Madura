@@ -1,5 +1,5 @@
 {
   "framework": "nextjs",
-  "buildCommand": "npx prisma generate && npx prisma migrate deploy && next build",
+  "buildCommand": "npx prisma generate && sh -c \"if [ -n \\\"$DATABASE_URL\\\" ]; then npx prisma migrate deploy || exit 1; else echo 'SKIP_MIGRATE: DATABASE_URL belum diset'; fi\" && next build",
   "installCommand": "npm install"
 }
