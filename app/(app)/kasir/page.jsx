@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { rupiah } from "@/lib/format";
-import Struk from "@/components/Struk";
+import StrukModal from "@/components/StrukModal";
 
 function CartPanel({
   cart,
@@ -574,20 +574,11 @@ export default function KasirPage() {
       )}
 
       {struk && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/70 p-4">
-          <div className="my-6 w-full max-w-sm rounded-3xl bg-white p-4 shadow-2xl">
-            <h2 className="mb-3 text-center font-display text-lg font-extrabold text-warung-coklat">
-              Struk Transaksi
-            </h2>
-            <Struk transaksi={struk} pengaturan={pengaturan} />
-            <button
-              onClick={() => setStruk(null)}
-              className="mt-4 w-full rounded-xl border-b-4 border-warung-kuningtua bg-warung-kuning px-4 py-3 font-extrabold text-warung-coklat transition hover:bg-amber-400 active:border-b-0 active:translate-y-0.5"
-            >
-              Transaksi Baru
-            </button>
-          </div>
-        </div>
+        <StrukModal
+          transaksi={struk}
+          pengaturan={pengaturan}
+          onClose={() => setStruk(null)}
+        />
       )}
     </div>
   );
