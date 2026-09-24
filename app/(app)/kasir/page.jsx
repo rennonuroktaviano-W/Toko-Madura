@@ -402,7 +402,7 @@ export default function KasirPage() {
         )}
       </div>
 
-      <div className="lg:grid lg:grid-cols-[13rem_minmax(0,1fr)_24rem] lg:items-start lg:gap-4">
+      <div className="lg:grid lg:grid-cols-[13rem_180px_minmax(0,1fr)_280px] lg:items-start lg:gap-4">
         <aside className="hidden lg:block lg:sticky lg:top-24">
           <div className="rounded-2xl border-2 border-warung-kuningtua/30 bg-white p-3 shadow-sm">
             <button
@@ -431,14 +431,13 @@ export default function KasirPage() {
           </div>
         </aside>
 
-        <section>
+<section style={{ overflowY: "auto" }}>
           <input
             type="search"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Cari barang (cth: Indomie)..."
-            className="w-full rounded-xl border-2 border-amber-200 bg-white px-4 py-3 outline-none transition focus:border-warung-oranye lg:sticky lg:top-24"
-          />
+placeholder="🔍 Cari barang (cth: Indomie)..."
+            className="w-full rounded-xl border-2 border-amber-200 bg-white px-4 py-3 outline-none transition focus:border-warung-oranye lg:sticky lg:top-0" />
 
           <div className="mt-3 flex gap-2 overflow-x-auto pb-1 lg:hidden">
             <button
@@ -466,13 +465,13 @@ export default function KasirPage() {
             ))}
           </div>
 
-          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+          <div className="mt-4 grid grid-cols-3 gap-3">
             {filtered.map((p) => (
               <button
                 key={p.id}
                 onClick={() => addToCart(p)}
                 disabled={p.stok <= 0}
-                className="group flex flex-col rounded-2xl border-2 bg-white p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:opacity-50"
+                className="group flex flex-col rounded-2xl border-2 bg-white p-3 text-left min-w-0 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:opacity-50"
                 style={{ borderColor: p.kategori.warna + "55" }}
               >
                 <div className="flex flex-wrap items-start justify-between gap-1">
