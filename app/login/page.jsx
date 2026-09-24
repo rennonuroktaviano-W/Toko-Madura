@@ -26,7 +26,7 @@ export default function LoginPage() {
         return;
       }
       const next =
-        new URLSearchParams(window.location.search).get("next") || "/kasir";
+        new URLSearchParams(window.location.search).get("next") || "/dashboard";
       router.replace(next);
       router.refresh();
     } catch (err) {

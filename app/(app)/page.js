@@ -1,5 +1,4 @@
-import { redirect } from "next/navigation";
-
-export default function RootPage() {
-  redirect("/kasir");
+﻿import { redirect } from "next/navigation";
+export default function AppHome() {
+  redirect("/dashboard");
 }
