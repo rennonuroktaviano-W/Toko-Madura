@@ -1,0 +1,110 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+enum MetodeBayar {
+  Tunai
+  QRIS
+}
+
+enum StatusProduk {
+  aktif
+  nonaktif
+}
+
+model Pengaturan {
+  id        Int    @id @default(autoincrement())
+  namaToko  String
+  alamat    String
+  tagline   String @default("Warung Kelontong 24 Jam")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model User {
+  id       Int    @id @default(autoincrement())
+  nama     String
+  username String @unique
+  password String
+  role     String @default("admin")
+
+  transaksis Transaksi[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Kategori {
+  id     Int    @id @default(autoincrement())
+  nama   String @unique
+  warna  String @default("#f59e0b")
+  icon   String @default("🏪")
+
+  produks Produk[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Produk {
+  id        Int    @id @default(autoincrement())
+  nama      String
+  kategoriId Int
+  harga     Int
+  stok      Int    @default(0)
+  satuan    String @default("pcs")
+  fotoUrl   String?
+  status    StatusProduk @default(aktif)
+
+  kategori Kategori @relation(fields: [kategoriId], references: [id], onDelete: Restrict)
+  itemTransaksis ItemTransaksi[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([nama])
+  @@index([kategoriId])
+}
+
+model Transaksi {
+  id          String      @id @default(cuid())
+  noTransaksi String      @unique
+  tanggal     DateTime    @default(now())
+  kasirId     Int
+  kasir       User        @relation(fields: [kasirId], references: [id])
+  subtotal    Int
+  grandTotal  Int
+  metodeBayar MetodeBayar
+  jumlahBayar Int
+  kembalian   Int
+  jumlahItem  Int
+
+  items ItemTransaksi[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tanggal])
+  @@index([kasirId])
+}
+
+model ItemTransaksi {
+  id          String  @id @default(cuid())
+  transaksiId String
+  transaksi   Transaksi @relation(fields: [transaksiId], references: [id], onDelete: Cascade)
+  produkId    Int
+  produk      Produk  @relation(fields: [produkId], references: [id], onDelete: Restrict)
+  nama        String
+  hargaSatuan Int
+  qty         Int
+  subtotal    Int
+  catatan     String?
+
+  @@index([transaksiId])
+  @@index([produkId])
+}
