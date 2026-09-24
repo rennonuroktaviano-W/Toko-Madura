@@ -30,10 +30,10 @@ export default function DashboardPage() {
   const maksTerlaris = Math.max(1, ...(data?.barangTerlaris ?? []).map((b) => b.qty));
 
   const stats = [
-    { label: "Omzet Hari Ini", value: rupiah(omzetHariIni), icon: "💰", warna: "from-amber-400 to-warung-oranye" },
-    { label: "Transaksi Hari Ini", value: jmlTrxHariIni, icon: "🧾", warna: "from-green-400 to-warung-hijau" },
-    { label: "Item Terjual Hari Ini", value: jmlItemHariIni, icon: "📦", warna: "from-blue-400 to-blue-600" },
-    { label: "Produk Aktif", value: produkAktif, icon: "🏪", warna: "from-purple-400 to-purple-600" },
+    { label: "Omzet Hari Ini", value: rupiah(omzetHariIni), warna: "from-amber-400 to-warung-oranye" },
+    { label: "Transaksi Hari Ini", value: jmlTrxHariIni, warna: "from-green-400 to-warung-hijau" },
+    { label: "Item Terjual Hari Ini", value: jmlItemHariIni, warna: "from-blue-400 to-blue-600" },
+    { label: "Produk Aktif", value: produkAktif, warna: "from-purple-400 to-purple-600" },
   ];
   const MAX_BAR = 130;
 
@@ -42,7 +42,7 @@ export default function DashboardPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-display text-2xl font-extrabold text-warung-coklat lg:text-3xl">
-            👋 Selamat Datang, Admin!
+            Selamat Datang, Admin!
           </h1>
           <p className="text-sm text-warung-coklat/60">
             Ringkasan penjualan warung hari ini.
@@ -52,7 +52,7 @@ export default function DashboardPage() {
           onClick={() => router.push("/kasir")}
           className="rounded-2xl border-b-4 border-warung-kuningtua bg-warung-kuning px-5 py-3 font-extrabold text-warung-coklat transition hover:bg-amber-400 active:border-b-0 active:translate-y-0.5"
         >
-          🧾 Buka Kasir
+          Buka Kasir
         </button>
       </div>
 
@@ -70,7 +70,6 @@ export default function DashboardPage() {
                 key={s.label}
                 className={`rounded-3xl bg-gradient-to-br ${s.warna} p-4 text-white shadow-lg`}
               >
-                <p className="text-xl sm:text-2xl">{s.icon}</p>
                 <p className="mt-2 break-words text-lg font-extrabold leading-tight sm:text-xl lg:text-2xl">
                   {s.value}
                 </p>
@@ -82,7 +81,7 @@ export default function DashboardPage() {
           <div className="mt-6 grid gap-5 lg:grid-cols-3">
             <div className="rounded-3xl border-2 border-amber-100 bg-white p-4 sm:p-5 lg:col-span-2">
               <h2 className="font-display text-lg font-extrabold text-warung-coklat">
-                📈 Penjualan 7 Hari Terakhir
+                Penjualan 7 Hari Terakhir
               </h2>
               <div className="mt-6 flex h-44 items-end gap-1.5 sm:gap-3">
                 {(data.tren7Hari ?? []).map((t) => {
@@ -115,7 +114,7 @@ export default function DashboardPage() {
 
             <div className="rounded-3xl border-2 border-amber-100 bg-white p-5">
               <h2 className="font-display text-lg font-extrabold text-warung-coklat">
-                🔥 Barang Terlaris
+                Barang Terlaris
               </h2>
               <div className="mt-3 space-y-3">
                 {(data.barangTerlaris ?? []).map((b, i) => (
@@ -147,7 +146,7 @@ export default function DashboardPage() {
           <div className="mt-6 rounded-3xl border-2 border-amber-100 bg-white p-5">
             <div className="flex items-center justify-between">
               <h2 className="font-display text-lg font-extrabold text-warung-coklat">
-                ⚠️ Stok Menipis
+                Stok Menipis
               </h2>
               <button
                 onClick={() => router.push("/barang")}
@@ -180,7 +179,7 @@ export default function DashboardPage() {
                 </div>
               ))}
               {(data.stokMenipis ?? []).length === 0 && (
-                <p className="text-sm text-warung-coklat/60">Semua stok aman. 🎉</p>
+                <p className="text-sm text-warung-coklat/60">Semua stok aman.</p>
               )}
             </div>
           </div>

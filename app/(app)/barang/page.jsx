@@ -217,7 +217,7 @@ export default function BarangPage() {
           type="search"
           value={fQ}
           onChange={(e) => setFQ(e.target.value)}
-          placeholder="🔍 Cari nama barang..."
+          placeholder="Cari nama barang..."
           className="w-full rounded-xl border-2 border-amber-200 bg-white px-4 py-3 outline-none transition focus:border-warung-oranye sm:max-w-xs"
         />
         <select
@@ -228,7 +228,7 @@ export default function BarangPage() {
           <option value="semua">Semua Kategori</option>
           {kategoris.map((k) => (
             <option key={k.id} value={k.id}>
-              {k.icon} {k.nama}
+              {k.nama}
             </option>
           ))}
         </select>
@@ -275,7 +275,7 @@ export default function BarangPage() {
                     className="mt-1 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold text-white"
                     style={{ backgroundColor: p.kategori.warna }}
                   >
-                    {p.kategori.icon} {p.kategori.nama}
+                    {p.kategori.nama}
                   </span>
                 </div>
                 {p.status === "nonaktif" && (
@@ -301,25 +301,25 @@ export default function BarangPage() {
                   onClick={openEdit.bind(null, p)}
                   className="rounded-lg bg-warung-krem px-3 py-2 text-sm font-bold text-warung-coklat transition hover:bg-amber-100"
                 >
-                  ✏️ Edit
+                  Edit
                 </button>
                 <button
                   onClick={() => setRestockId(p.id)}
                   className="rounded-lg bg-green-50 px-3 py-2 text-sm font-bold text-warung-hijau transition hover:bg-green-100"
                 >
-                  📦 Restock
+                  Restock
                 </button>
                 <button
                   onClick={() => handleToggleStatus(p)}
                   className="rounded-lg bg-gray-50 px-3 py-2 text-sm font-bold text-gray-600 transition hover:bg-gray-100"
                 >
-                  {p.status === "aktif" ? "⏸ Nonaktifkan" : "▶️ Aktifkan"}
+                  {p.status === "aktif" ? "Nonaktifkan" : "Aktifkan"}
                 </button>
                 <button
                   onClick={() => handleDelete(p)}
                   className="rounded-lg bg-red-50 px-3 py-2 text-sm font-bold text-warung-merah transition hover:bg-red-100"
                 >
-                  🗑️ Hapus
+                  Hapus
                 </button>
               </div>
             </div>
@@ -367,7 +367,7 @@ export default function BarangPage() {
                     <option value="">Pilih...</option>
                     {kategoris.map((k) => (
                       <option key={k.id} value={k.id}>
-                        {k.icon} {k.nama}
+                        {k.nama}
                       </option>
                     ))}
                   </select>
@@ -459,7 +459,7 @@ export default function BarangPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl">
             <h2 className="font-display text-xl font-extrabold text-warung-coklat">
-              📦 Restock Barang
+              Restock Barang
             </h2>
             <form onSubmit={handleRestock} className="mt-4 space-y-4">
               <div className="flex flex-wrap gap-2">

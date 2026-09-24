@@ -29,7 +29,7 @@ function CartPanel({
     <div className="rounded-2xl border-2 border-warung-kuningtua/30 bg-white p-4 shadow-sm">
       <div className="flex items-center justify-between">
         <h2 className="font-display text-lg font-extrabold text-warung-coklat">
-          🧺 Keranjang
+          Keranjang
         </h2>
         {cart.length > 0 && (
           <button
@@ -87,7 +87,7 @@ function CartPanel({
                   onClick={() => toggleCatatan(c.produkId)}
                   className="text-xs font-bold text-warung-hijau hover:underline"
                 >
-                  {c.showCatatan ? "Tutup" : c.catatan ? "✏️ Ubah Catatan" : "➕ Catatan"}
+                  {c.showCatatan ? "Tutup" : c.catatan ? "Ubah Catatan" : "Catatan"}
                 </button>
               </div>
               {c.showCatatan && (
@@ -133,7 +133,7 @@ function CartPanel({
                     : "bg-warung-krem text-warung-coklat hover:bg-amber-100"
                 }`}
               >
-                💵 Tunai
+                Tunai
               </button>
               <button
                 onClick={() => {
@@ -146,7 +146,7 @@ function CartPanel({
                     : "bg-warung-krem text-warung-coklat hover:bg-amber-100"
                 }`}
               >
-                📱 QRIS
+                QRIS
               </button>
             </div>
           </div>
@@ -191,7 +191,7 @@ function CartPanel({
             disabled={processing || cart.length === 0}
             className="mt-4 w-full rounded-xl border-b-4 border-green-700 bg-green-600 px-4 py-4 text-lg font-extrabold text-white transition hover:bg-green-500 active:border-b-0 active:translate-y-0.5 disabled:opacity-50"
           >
-            {processing ? "Memproses..." : "Selesaikan Transaksi ✅"}
+            {processing ? "Memproses..." : "Selesaikan Transaksi"}
           </button>
         </>
       )}
@@ -393,7 +393,7 @@ export default function KasirPage() {
     <div className="pb-28 lg:pb-4">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <h1 className="font-display text-2xl font-extrabold text-warung-coklat lg:text-3xl">
-          🛒 Halaman Kasir
+          Halaman Kasir
         </h1>
         {flash && (
           <span className="max-w-full truncate rounded-full bg-warung-kuning px-4 py-2 text-sm font-extrabold text-warung-coklat shadow">
@@ -413,7 +413,7 @@ export default function KasirPage() {
                   : "text-warung-coklat hover:bg-warung-krem"
               }`}
             >
-              🏬 Semua
+              Semua
             </button>
             {kategoris.map((k) => (
               <button
@@ -425,7 +425,6 @@ export default function KasirPage() {
                     : "text-warung-coklat hover:bg-warung-krem"
                 }`}
               >
-                <span>{k.icon}</span>
                 <span className="truncate">{k.nama}</span>
               </button>
             ))}
@@ -437,7 +436,7 @@ export default function KasirPage() {
             type="search"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="🔍 Cari barang (cth: Indomie)..."
+            placeholder="Cari barang (cth: Indomie)..."
             className="w-full rounded-xl border-2 border-amber-200 bg-white px-4 py-3 outline-none transition focus:border-warung-oranye lg:sticky lg:top-24"
           />
 
@@ -450,7 +449,7 @@ export default function KasirPage() {
                   : "bg-white text-warung-coklat"
               }`}
             >
-              🏬 Semua
+              Semua
             </button>
             {kategoris.map((k) => (
               <button
@@ -462,7 +461,7 @@ export default function KasirPage() {
                     : "bg-white text-warung-coklat"
                 }`}
               >
-                {k.icon} {k.nama}
+                {k.nama}
               </button>
             ))}
           </div>
@@ -481,9 +480,7 @@ export default function KasirPage() {
                     className="inline-flex max-w-full items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold text-white"
                     style={{ backgroundColor: p.kategori.warna }}
                   >
-                    <span className="truncate">
-                      {p.kategori.icon} {p.kategori.nama}
-                    </span>
+                    <span className="truncate">{p.kategori.nama}</span>
                   </span>
                   {stokLabel(p)}
                 </div>
@@ -536,7 +533,7 @@ export default function KasirPage() {
           onClick={() => setCartOpen(true)}
           className="w-full rounded-xl border-b-4 border-green-700 bg-green-600 px-4 py-4 text-lg font-extrabold text-white transition active:border-b-0 active:translate-y-0.5"
         >
-          🧺 Lihat Keranjang ({jumlahItem} item — {rupiah(total)})
+          Lihat Keranjang ({jumlahItem} item — {rupiah(total)})
         </button>
       </div>
 

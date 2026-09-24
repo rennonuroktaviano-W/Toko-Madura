@@ -30,7 +30,6 @@ export async function POST(request) {
 
   const nama = String(body?.nama ?? "").trim();
   const warna = String(body?.warna ?? "#f59e0b").trim();
-  const icon = String(body?.icon ?? "🏪").trim();
 
   if (!nama) {
     return Response.json({ error: "Nama kategori wajib diisi" }, { status: 400 });
@@ -38,7 +37,7 @@ export async function POST(request) {
 
   try {
     const created = await prisma.kategori.create({
-      data: { nama, warna, icon },
+      data: { nama, warna },
     });
     return Response.json(created, { status: 201 });
   } catch (e) {

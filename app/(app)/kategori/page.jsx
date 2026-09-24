@@ -13,9 +13,7 @@ const WARNA = [
   "#78350f",
 ];
 
-const IKON = ["🏪", "🚬", "🥤", "🍬", "🍭", "🍦", "🌾", "🧴", "☕", "🍜", "🧋", "🍫", "📦"];
-
-const emptyForm = { nama: "", warna: "#f59e0b", icon: "🏪" };
+const emptyForm = { nama: "", warna: "#f59e0b" };
 
 export default function KategoriPage() {
   const [kategoris, setKategoris] = useState([]);
@@ -54,7 +52,7 @@ export default function KategoriPage() {
 
   function openEdit(k) {
     setEditId(k.id);
-    setForm({ nama: k.nama, warna: k.warna, icon: k.icon });
+    setForm({ nama: k.nama, warna: k.warna });
     setOpen(true);
   }
 
@@ -140,15 +138,13 @@ export default function KategoriPage() {
               className="rounded-2xl border-2 bg-white p-5 shadow-sm transition hover:shadow-md"
               style={{ borderColor: k.warna }}
             >
-              <div className="flex items-center gap-4">
-                <div
-                  className="flex h-14 w-14 items-center justify-center rounded-2xl text-3xl shadow-inner"
-                  style={{ backgroundColor: k.warna + "1f" }}
-                >
-                  {k.icon}
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-display text-lg font-extrabold text-warung-coklat">
+              <div className="flex items-center gap-3">
+                <span
+                  className="h-4 w-4 flex-none rounded-full shadow-inner"
+                  style={{ backgroundColor: k.warna }}
+                />
+                <div className="min-w-0 flex-1">
+                  <h3 className="truncate font-display text-lg font-extrabold text-warung-coklat">
                     {k.nama}
                   </h3>
                   <p className="text-xs font-semibold text-warung-coklat/50">
@@ -161,13 +157,13 @@ export default function KategoriPage() {
                   onClick={() => openEdit(k)}
                   className="flex-1 rounded-lg bg-warung-krem px-3 py-2 text-sm font-bold text-warung-coklat transition hover:bg-amber-100"
                 >
-                  ✏️ Edit
+                  Edit
                 </button>
                 <button
                   onClick={() => handleDelete(k)}
                   className="flex-1 rounded-lg bg-red-50 px-3 py-2 text-sm font-bold text-warung-merah transition hover:bg-red-100"
                 >
-                  🗑️ Hapus
+                  Hapus
                 </button>
               </div>
             </div>
@@ -199,28 +195,6 @@ export default function KategoriPage() {
                   className="w-full rounded-xl border-2 border-amber-200 bg-warung-krem px-4 py-3 outline-none focus:border-warung-oranye"
                   required
                 />
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-bold text-warung-coklat">
-                  Ikon
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {IKON.map((i) => (
-                    <button
-                      type="button"
-                      key={i}
-                      onClick={() => setForm({ ...form, icon: i })}
-                      className={`flex h-10 w-10 items-center justify-center rounded-xl text-xl transition ${
-                        form.icon === i
-                          ? "bg-warung-kuning ring-2 ring-warung-oranye"
-                          : "bg-warung-krem hover:bg-amber-100"
-                      }`}
-                    >
-                      {i}
-                    </button>
-                  ))}
-                </div>
               </div>
 
               <div>

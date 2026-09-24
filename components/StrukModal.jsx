@@ -56,14 +56,14 @@ export default function StrukModal({ transaksi, pengaturan, onClose, buttonClose
             onClick={handlePrint}
             className="rounded-xl border-b-4 border-blue-700 bg-blue-600 px-4 py-3 font-extrabold text-white transition hover:bg-blue-500 active:border-b-0 active:translate-y-0.5"
           >
-            🖨️ Print
+            Print
           </button>
           <button
             onClick={handleDownload}
             disabled={loading}
             className="rounded-xl border-b-4 border-purple-700 bg-purple-600 px-4 py-3 font-extrabold text-white transition hover:bg-purple-500 active:border-b-0 active:translate-y-0.5 disabled:opacity-60"
           >
-            {loading ? "Memproses..." : "⬇️ PNG"}
+            {loading ? "Memproses..." : "Download PNG"}
           </button>
         </div>
 

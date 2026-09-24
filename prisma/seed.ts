@@ -29,12 +29,12 @@ async function main() {
   });
 
   const kategoriData = [
-    { nama: "Rokok", warna: "#dc2626", icon: "🚬" },
-    { nama: "Minuman Dingin", warna: "#2563eb", icon: "🥤" },
-    { nama: "Jajanan Anak", warna: "#eab308", icon: "🍬" },
-    { nama: "Sembako", warna: "#16a34a", icon: "🌾" },
-    { nama: "Kebutuhan Harian", warna: "#ea580c", icon: "🧴" },
-    { nama: "Es Krim", warna: "#db2777", icon: "🍦" },
+    { nama: "Rokok", warna: "#dc2626" },
+    { nama: "Minuman Dingin", warna: "#2563eb" },
+    { nama: "Jajanan Anak", warna: "#eab308" },
+    { nama: "Sembako", warna: "#16a34a" },
+    { nama: "Kebutuhan Harian", warna: "#ea580c" },
+    { nama: "Es Krim", warna: "#db2777" },
   ];
 
   const kategoris: Record<string, number> = {};

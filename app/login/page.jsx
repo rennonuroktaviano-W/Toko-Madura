@@ -40,8 +40,10 @@ export default function LoginPage() {
     <div className="flex flex-1 items-center justify-center bg-gradient-to-b from-amber-300 via-amber-200 to-orange-100 p-4">
       <div className="w-full max-w-sm rounded-3xl border-4 border-warung-coklat/20 bg-white p-8 shadow-2xl">
         <div className="mb-6 text-center">
-          <div className="mx-auto mb-3 flex h-20 w-20 items-center justify-center rounded-full border-4 border-warung-kuning bg-warung-krem text-4xl shadow-inner">
-            🏪
+          <div className="mx-auto mb-3 flex h-20 w-20 items-center justify-center rounded-full border-4 border-warung-kuning bg-warung-krem shadow-inner">
+            <span className="font-display text-3xl font-extrabold text-warung-oranye">
+              WM
+            </span>
           </div>
           <h1 className="font-display text-3xl font-extrabold text-warung-coklat">
             Warung Madura

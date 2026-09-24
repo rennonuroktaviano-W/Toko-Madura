@@ -4,11 +4,11 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
 const links = [
-  { href: "/kasir", label: "Kasir", icon: "🛒" },
-  { href: "/barang", label: "Barang", icon: "🥫" },
-  { href: "/kategori", label: "Kategori", icon: "🏷️" },
-  { href: "/riwayat", label: "Riwayat", icon: "🧾" },
-  { href: "/dashboard", label: "Dashboard", icon: "📊" },
+  { href: "/kasir", label: "Kasir" },
+  { href: "/barang", label: "Barang" },
+  { href: "/kategori", label: "Kategori" },
+  { href: "/riwayat", label: "Riwayat" },
+  { href: "/dashboard", label: "Dashboard" },
 ];
 
 export default function NavBar() {
@@ -28,14 +28,11 @@ export default function NavBar() {
   return (
     <>
       <aside className="hidden lg:flex lg:w-64 lg:shrink-0 lg:flex-col bg-warung-hijau text-white">
-        <div className="flex items-center gap-3 border-b border-white/10 px-6 py-5">
-          <span className="text-3xl">🏪</span>
-          <div>
-            <p className="font-display text-xl font-extrabold leading-tight">
-              Warung Madura
-            </p>
-            <p className="text-xs text-amber-200/80">Kasir 24 Jam</p>
-          </div>
+        <div className="border-b border-white/10 px-6 py-5">
+          <p className="font-display text-xl font-extrabold leading-tight">
+            Warung Madura
+          </p>
+          <p className="text-xs text-amber-200/80">Kasir 24 Jam</p>
         </div>
         <nav className="flex-1 space-y-1 px-3 py-4">
           {links.map((l) => (
@@ -48,7 +45,6 @@ export default function NavBar() {
                   : "text-white/90 hover:bg-white/10"
               }`}
             >
-              <span className="text-xl">{l.icon}</span>
               {l.label}
             </Link>
           ))}
@@ -58,14 +54,13 @@ export default function NavBar() {
             onClick={handleLogout}
             className="flex w-full items-center gap-3 rounded-xl bg-red-600/80 px-4 py-3 text-sm font-bold text-white transition hover:bg-red-600"
           >
-            <span className="text-xl">🚪</span> Keluar
+            Keluar
           </button>
         </div>
       </aside>
 
       <header className="sticky top-0 z-30 bg-warung-hijau text-white shadow-lg lg:hidden">
         <div className="flex items-center gap-3 px-4 py-3">
-          <span className="text-2xl">🏪</span>
           <p className="font-display text-lg font-extrabold">Warung Madura</p>
           <span className="ml-auto font-bold text-amber-200 text-xs">
             Kasir 24 Jam
@@ -82,7 +77,6 @@ export default function NavBar() {
                   : "bg-white/10 text-white/90"
               }`}
             >
-              <span>{l.icon}</span>
               {l.label}
             </Link>
           ))}
@@ -90,7 +84,7 @@ export default function NavBar() {
             onClick={handleLogout}
             className="flex shrink-0 items-center gap-2 rounded-full bg-red-600/80 px-4 py-2 text-sm font-bold text-white"
           >
-            <span>🚪</span> Keluar
+            Keluar
           </button>
         </nav>
       </header>

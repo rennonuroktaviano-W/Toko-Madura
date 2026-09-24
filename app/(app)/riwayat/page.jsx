@@ -53,7 +53,7 @@ export default function RiwayatPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-display text-2xl font-extrabold text-warung-coklat lg:text-3xl">
-            🧾 Riwayat Transaksi
+            Riwayat Transaksi
           </h1>
           <p className="text-sm text-warung-coklat/60">
             Lihat semua transaksi yang pernah terjadi dan unduh ulang struk.

@@ -11,7 +11,7 @@ export async function GET(request) {
   const url = new URL(request.url);
   const kategoriId = url.searchParams.get("kategori");
   const q = url.searchParams.get("q")?.trim();
-  const status = url.searchParams.get("status"); // semua | aktif | nonaktif
+  const status = url.searchParams.get("status");
 
   const where = {};
   if (kategoriId && kategoriId !== "semua") where.kategoriId = Number(kategoriId);

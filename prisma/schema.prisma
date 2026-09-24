@@ -43,7 +43,6 @@ model Kategori {
   id     Int    @id @default(autoincrement())
   nama   String @unique
   warna  String @default("#f59e0b")
-  icon   String @default("🏪")
 
   produks Produk[]
 
