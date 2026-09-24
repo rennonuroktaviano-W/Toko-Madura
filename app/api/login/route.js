@@ -17,7 +17,7 @@ export async function POST(request) {
     return Response.json({ error: "Data tidak valid" }, { status: 400 });
   }
 
-  const username = String(body?.username ?? "").trim();
+  const username = String(body?.username ?? "").trim().toLowerCase();
   const password = String(body?.password ?? "");
 
   if (!username || !password) {
