@@ -1,0 +1,53 @@
+import { prisma } from "@/lib/db";
+import { requireAuth, unauthorized } from "@/lib/api-auth";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+export async function GET() {
+  const user = await requireAuth();
+  if (!user) return unauthorized();
+
+  const kategoris = await prisma.kategori.findMany({
+    orderBy: { nama: "asc" },
+    include: {
+      _count: { select: { produks: { where: { status: "aktif" } } } },
+    },
+  });
+  return Response.json(kategoris);
+}
+
+export async function POST(request) {
+  const user = await requireAuth();
+  if (!user) return unauthorized();
+
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json({ error: "Data tidak valid" }, { status: 400 });
+  }
+
+  const nama = String(body?.nama ?? "").trim();
+  const warna = String(body?.warna ?? "#f59e0b").trim();
+  const icon = String(body?.icon ?? "🏪").trim();
+
+  if (!nama) {
+    return Response.json({ error: "Nama kategori wajib diisi" }, { status: 400 });
+  }
+
+  try {
+    const created = await prisma.kategori.create({
+      data: { nama, warna, icon },
+    });
+    return Response.json(created, { status: 201 });
+  } catch (e) {
+    if (e?.code === "P2002") {
+      return Response.json(
+        { error: "Nama kategori sudah dipakai" },
+        { status: 409 }
+      );
+    }
+    throw e;
+  }
+}
