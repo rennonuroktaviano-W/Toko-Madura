@@ -36,7 +36,9 @@ export default function RiwayatPage() {
 
   function hariIni() {
     const d = new Date();
-    const iso = d.toISOString().slice(0, 10);
+    const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
+      d.getDate()
+    ).padStart(2, "0")}`;
     setDari(iso);
     setSampai(iso);
   }
@@ -98,7 +100,7 @@ export default function RiwayatPage() {
           <p className="text-xs font-bold text-warung-coklat/60">
             Omzet di rentang ini
           </p>
-          <p className="font-display text-2xl font-extrabold text-warung-oranye">
+          <p className="break-words font-display text-xl font-extrabold text-warung-oranye sm:text-2xl">
             {rupiah(totalOmzet)}
           </p>
           <p className="text-xs font-semibold text-warung-coklat/60">
@@ -117,7 +119,7 @@ export default function RiwayatPage() {
               onClick={() => router.push(`/transaksi/${t.id}`)}
               className="flex w-full flex-col gap-2 rounded-2xl border-2 border-amber-100 bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-warung-kuningtua hover:shadow-md sm:flex-row sm:items-center"
             >
-              <div className="flex-1">
+              <div className="min-w-0 flex-1">
                 <p className="font-display text-base font-extrabold text-warung-coklat">
                   {t.noTransaksi}
                 </p>
@@ -139,8 +141,8 @@ export default function RiwayatPage() {
                   {t.metodeBayar}
                 </span>
               </div>
-              <div className="sm:w-32 sm:text-right">
-                <p className="font-extrabold text-warung-oranye">
+              <div className="sm:w-36 sm:text-right">
+                <p className="break-words font-extrabold text-warung-oranye">
                   {rupiah(t.grandTotal)}
                 </p>
                 <p className="text-xs font-semibold text-warung-hijau">

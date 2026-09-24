@@ -391,12 +391,12 @@ export default function KasirPage() {
 
   return (
     <div className="pb-28 lg:pb-4">
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <h1 className="font-display text-2xl font-extrabold text-warung-coklat lg:text-3xl">
           🛒 Halaman Kasir
         </h1>
         {flash && (
-          <span className="rounded-full bg-warung-kuning px-4 py-2 text-sm font-extrabold text-warung-coklat shadow">
+          <span className="max-w-full truncate rounded-full bg-warung-kuning px-4 py-2 text-sm font-extrabold text-warung-coklat shadow">
             {flash}
           </span>
         )}
@@ -476,12 +476,14 @@ export default function KasirPage() {
                 className="group flex flex-col rounded-2xl border-2 bg-white p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:opacity-50"
                 style={{ borderColor: p.kategori.warna + "55" }}
               >
-                <div className="flex items-start justify-between gap-1">
+                <div className="flex flex-wrap items-start justify-between gap-1">
                   <span
-                    className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold text-white"
+                    className="inline-flex max-w-full items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold text-white"
                     style={{ backgroundColor: p.kategori.warna }}
                   >
-                    {p.kategori.icon} {p.kategori.nama}
+                    <span className="truncate">
+                      {p.kategori.icon} {p.kategori.nama}
+                    </span>
                   </span>
                   {stokLabel(p)}
                 </div>

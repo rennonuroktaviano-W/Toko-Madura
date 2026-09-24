@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { rupiah } from "@/lib/format";
+import { rupiah, formatRupiahSingkat } from "@/lib/format";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -35,13 +35,14 @@ export default function DashboardPage() {
     { label: "Item Terjual Hari Ini", value: jmlItemHariIni, icon: "📦", warna: "from-blue-400 to-blue-600" },
     { label: "Produk Aktif", value: produkAktif, icon: "🏪", warna: "from-purple-400 to-purple-600" },
   ];
+  const MAX_BAR = 130;
 
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-display text-2xl font-extrabold text-warung-coklat lg:text-3xl">
-            👋 Selamat Datang, {data?.error ? "" : "Kasir"}!
+            👋 Selamat Datang, Admin!
           </h1>
           <p className="text-sm text-warung-coklat/60">
             Ringkasan penjualan warung hari ini.
@@ -63,40 +64,52 @@ export default function DashboardPage() {
         </p>
       ) : (
         <>
-          <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {stats.map((s) => (
               <div
                 key={s.label}
                 className={`rounded-3xl bg-gradient-to-br ${s.warna} p-4 text-white shadow-lg`}
               >
-                <p className="text-2xl">{s.icon}</p>
-                <p className="mt-2 text-2xl font-extrabold leading-tight">{s.value}</p>
-                <p className="text-xs font-semibold text-white/80">{s.label}</p>
+                <p className="text-xl sm:text-2xl">{s.icon}</p>
+                <p className="mt-2 break-words text-lg font-extrabold leading-tight sm:text-xl lg:text-2xl">
+                  {s.value}
+                </p>
+                <p className="mt-0.5 text-xs font-semibold text-white/80">{s.label}</p>
               </div>
             ))}
           </div>
 
           <div className="mt-6 grid gap-5 lg:grid-cols-3">
-            <div className="rounded-3xl border-2 border-amber-100 bg-white p-5 lg:col-span-2">
+            <div className="rounded-3xl border-2 border-amber-100 bg-white p-4 sm:p-5 lg:col-span-2">
               <h2 className="font-display text-lg font-extrabold text-warung-coklat">
                 📈 Penjualan 7 Hari Terakhir
               </h2>
-              <div className="mt-4 flex h-48 items-end gap-2">
-                {(data.tren7Hari ?? []).map((t) => (
-                  <div key={t.tanggal} className="group flex flex-1 flex-col items-center gap-1">
-                    <span className="text-[10px] font-bold text-warung-oranye opacity-0 transition group-hover:opacity-100">
-                      {rupiah(t.omzet).replace(/Rp\s?/, "Rp")}
-                    </span>
+              <div className="mt-6 flex h-44 items-end gap-1.5 sm:gap-3">
+                {(data.tren7Hari ?? []).map((t) => {
+                  const h = Math.max(4, Math.round((t.omzet / maksTren) * MAX_BAR));
+                  return (
                     <div
-                      className="w-full rounded-t-xl bg-gradient-to-t from-warung-oranye to-amber-300 transition group-hover:from-orange-600"
-                      style={{ height: `${Math.max(4, (t.omzet / maksTren) * 100)}%` }}
-                      title={`${t.tanggal}: ${rupiah(t.omzet)}`}
-                    />
-                    <span className="text-[10px] font-bold text-warung-coklat/50">
-                      {t.tanggal}
-                    </span>
-                  </div>
-                ))}
+                      key={t.tanggal}
+                      className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1"
+                    >
+                      <span
+                        className={`w-full truncate text-center text-[9px] font-bold sm:text-[10px] ${
+                          t.omzet > 0 ? "text-warung-oranye" : "text-transparent"
+                        }`}
+                      >
+                        {t.omzet > 0 ? formatRupiahSingkat(t.omzet) : ""}
+                      </span>
+                      <div
+                        className="w-full rounded-t-lg bg-gradient-to-t from-warung-oranye to-amber-300"
+                        style={{ height: `${h}px` }}
+                        title={`${t.tanggal}: ${rupiah(t.omzet)}`}
+                      />
+                      <span className="w-full truncate text-center text-[9px] font-bold text-warung-coklat/50 sm:text-[10px]">
+                        {t.tanggal}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
