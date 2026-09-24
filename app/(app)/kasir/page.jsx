@@ -402,7 +402,7 @@ export default function KasirPage() {
         )}
       </div>
 
-      <div className="lg:grid lg:grid-cols-[13rem_180px_minmax(0,1fr)_280px] lg:items-start lg:gap-4">
+      <div className="lg:grid lg:grid-cols-[180px_minmax(0,1fr)_280px] lg:items-start lg:gap-4">
         <aside className="hidden lg:block lg:sticky lg:top-24">
           <div className="rounded-2xl border-2 border-warung-kuningtua/30 bg-white p-3 shadow-sm">
             <button
@@ -486,7 +486,7 @@ placeholder="🔍 Cari barang (cth: Indomie)..."
                 <p className="mt-2 flex-1 text-sm font-extrabold leading-tight text-warung-coklat">
                   {p.nama}
                 </p>
-                <p className="mt-2 font-extrabold text-warung-oranye">
+                <p className="mt-auto font-extrabold text-warung-oranye">
                   {rupiah(p.harga)}
                   <span className="text-[11px] font-bold text-warung-coklat/50">
                     /{p.satuan}
