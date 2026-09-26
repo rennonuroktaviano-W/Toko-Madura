@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { requireAuth, unauthorized } from "@/lib/api-auth";
+import { namaValid, warnaValid } from "@/lib/validasi";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,17 +22,27 @@ export async function PUT(request, ctx) {
     return Response.json({ error: "Data tidak valid" }, { status: 400 });
   }
 
-  const nama = String(body?.nama ?? "").trim();
-  const warna = String(body?.warna ?? "#f59e0b").trim();
+  const nama = body?.nama === undefined ? undefined : String(body.nama).trim();
+  const warna = body?.warna === undefined ? undefined : String(body.warna).trim();
 
-  if (!nama) {
-    return Response.json({ error: "Nama kategori wajib diisi" }, { status: 400 });
+  if (nama !== undefined && !namaValid(nama)) {
+    return Response.json(
+      { error: "Nama kategori wajib diisi, maksimal 191 karakter" },
+      { status: 400 }
+    );
   }
+  if (warna !== undefined && !warnaValid(warna)) {
+    return Response.json({ error: "Warna tidak valid" }, { status: 400 });
+  }
+
+  const data = {};
+  if (nama !== undefined) data.nama = nama;
+  if (warna !== undefined) data.warna = warna;
 
   try {
     const updated = await prisma.kategori.update({
       where: { id: kategoriId },
-      data: { nama, warna },
+      data,
     });
     return Response.json(updated);
   } catch (e) {

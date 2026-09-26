@@ -6,7 +6,7 @@ import Struk from "./Struk";
 
 export default function StrukModal({ transaksi, pengaturan, onClose, buttonClose = "Transaksi Baru", title = "Struk Transaksi" }) {
   const ref = useRef(null);
-  const [loading, setLoading] = useState(false);
+  const [busy, setBusy] = useState(null);
 
   async function generatePng() {
     return toPng(ref.current, {
@@ -17,7 +17,7 @@ export default function StrukModal({ transaksi, pengaturan, onClose, buttonClose
 
   async function handleDownload() {
     if (!ref.current) return;
-    setLoading(true);
+    setBusy("download");
     try {
       const dataUrl = await generatePng();
       const link = document.createElement("a");
@@ -27,16 +27,17 @@ export default function StrukModal({ transaksi, pengaturan, onClose, buttonClose
     } catch {
       window.alert("Gagal membuat gambar struk.");
     } finally {
-      setLoading(false);
+      setBusy(null);
     }
   }
 
   async function handlePrint() {
     if (!ref.current) return;
-    setLoading(true);
+    setBusy("print");
+    let iframe;
     try {
       const dataUrl = await generatePng();
-      const iframe = document.createElement("iframe");
+      iframe = document.createElement("iframe");
       Object.assign(iframe.style, {
         position: "fixed",
         left: "-9999px",
@@ -48,7 +49,7 @@ export default function StrukModal({ transaksi, pengaturan, onClose, buttonClose
       document.body.appendChild(iframe);
       const win = iframe.contentWindow;
       win.document.write(
-        `<!doctype html><html><head><title>Struk ${transaksi.noTransaksi}</title><style>` +
+        `<!doctype html><html><head><style>` +
           `*{margin:0;padding:0;box-sizing:border-box}` +
           `body{display:flex;justify-content:center;padding:16px 0}` +
           `img{width:300px;height:auto}` +
@@ -56,29 +57,38 @@ export default function StrukModal({ transaksi, pengaturan, onClose, buttonClose
           `</style></head><body><img src="${dataUrl}" alt="Struk" /></body></html>`
       );
       win.document.close();
+      win.document.title = `Struk ${transaksi.noTransaksi}`;
 
-      const cleanup = () => setTimeout(() => iframe.remove(), 500);
-      const doPrint = () => {
+      let selesai = false;
+      const hapusIframe = () => {
+        if (selesai) return;
+        selesai = true;
+        win.onafterprint = null;
+        iframe.remove();
+      };
+
+      const cetak = () => {
         win.focus();
-        win.onafterprint = cleanup;
+        win.onafterprint = hapusIframe;
         win.print();
-        cleanup();
+        setTimeout(hapusIframe, 1000);
       };
 
       const img = win.document.querySelector("img");
       if (img.complete && img.naturalWidth > 0) {
-        doPrint();
+        cetak();
       } else {
-        img.onload = doPrint;
+        img.onload = cetak;
         img.onerror = () => {
           window.alert("Gagal membuat gambar struk.");
-          iframe.remove();
+          hapusIframe();
         };
       }
     } catch {
       window.alert("Gagal mencetak struk.");
+      iframe?.remove();
     } finally {
-      setLoading(false);
+      setBusy(null);
     }
   }
 
@@ -105,16 +115,17 @@ export default function StrukModal({ transaksi, pengaturan, onClose, buttonClose
         <div className="mt-4 grid grid-cols-2 gap-2">
           <button
             onClick={handlePrint}
-            className="rounded-xl border-b-4 border-blue-700 bg-blue-600 px-4 py-3 font-extrabold text-white transition hover:bg-blue-500 active:border-b-0 active:translate-y-0.5"
+            disabled={busy !== null}
+            className="rounded-xl border-b-4 border-blue-700 bg-blue-600 px-4 py-3 font-extrabold text-white transition hover:bg-blue-500 active:border-b-0 active:translate-y-0.5 disabled:opacity-60"
           >
-            Print
+            {busy === "print" ? "Memproses..." : "Print"}
           </button>
           <button
             onClick={handleDownload}
-            disabled={loading}
+            disabled={busy !== null}
             className="rounded-xl border-b-4 border-purple-700 bg-purple-600 px-4 py-3 font-extrabold text-white transition hover:bg-purple-500 active:border-b-0 active:translate-y-0.5 disabled:opacity-60"
           >
-            {loading ? "Memproses..." : "Download PNG"}
+            {busy === "download" ? "Memproses..." : "Download PNG"}
           </button>
         </div>
 

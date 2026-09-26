@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { requireAuth, unauthorized } from "@/lib/api-auth";
+import { namaValid, warnaValid } from "@/lib/validasi";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -31,8 +32,14 @@ export async function POST(request) {
   const nama = String(body?.nama ?? "").trim();
   const warna = String(body?.warna ?? "#f59e0b").trim();
 
-  if (!nama) {
-    return Response.json({ error: "Nama kategori wajib diisi" }, { status: 400 });
+  if (!namaValid(nama)) {
+    return Response.json(
+      { error: `Nama kategori wajib diisi, maksimal 191 karakter` },
+      { status: 400 }
+    );
+  }
+  if (!warnaValid(warna)) {
+    return Response.json({ error: "Warna tidak valid" }, { status: 400 });
   }
 
   try {

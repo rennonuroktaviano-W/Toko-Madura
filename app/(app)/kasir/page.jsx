@@ -3,6 +3,11 @@
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { rupiah } from "@/lib/format";
+import { useApi } from "@/lib/use-api";
+import { useFlash } from "@/lib/use-flash";
+import { MAX_CATATAN } from "@/lib/validasi";
+import FilterKategori from "@/components/FilterKategori";
+import StokBadge from "@/components/StokBadge";
 import StrukModal from "@/components/StrukModal";
 
 function CartPanel({
@@ -14,7 +19,6 @@ function CartPanel({
   bayar,
   setBayar,
   kembalian,
-  uangKurang,
   inc,
   dec,
   removeItem,
@@ -22,12 +26,11 @@ function CartPanel({
   setCatatan,
   hapusSemua,
   onSubmit,
+  onPerbesarQR,
   processing,
   error,
   setError,
 }) {
-  const [qrisZoom, setQrisZoom] = useState(false);
-
   return (
     <div className="flex max-h-[calc(90dvh-8rem)] flex-col rounded-2xl border-2 border-warung-kuningtua/30 bg-white p-4 shadow-sm lg:max-h-[calc(100dvh-7rem)]">
       <div className="flex shrink-0 items-center justify-between">
@@ -98,9 +101,10 @@ function CartPanel({
                   <input
                     type="text"
                     value={c.catatan}
+                    maxLength={MAX_CATATAN}
                     onChange={(e) => setCatatan(c.produkId, e.target.value)}
                     placeholder="Catatan (mis. No Gula)"
-                    className="mt-2 w-full rounded-lg border-2 border-amber-200 bg-warung-krem px-3 py-2 text-sm outline-none focus:border-warung-oranye"
+                    className="mt-2 w-full rounded-lg border-2 border-amber-200 bg-warung-krem px-3 py-2 text-sm outline-none focus:border-warung-oranje"
                   />
                 )}
               </div>
@@ -143,7 +147,7 @@ function CartPanel({
                   onClick={() => {
                     setMetode("QRIS");
                     setError("");
-                    setQrisZoom(true);
+                    onPerbesarQR();
                   }}
                   className={`rounded-xl px-3 py-2.5 font-extrabold transition ${
                     metode === "QRIS"
@@ -183,7 +187,7 @@ function CartPanel({
               <div className="mt-3 rounded-xl border-2 border-blue-100 bg-blue-50 p-3 text-center">
                 <button
                   type="button"
-                  onClick={() => setQrisZoom(true)}
+                  onClick={onPerbesarQR}
                   title="Perbesar QR"
                   className="mx-auto block w-full max-w-[200px] rounded-lg bg-white p-1 transition hover:bg-blue-100"
                 >
@@ -223,29 +227,33 @@ function CartPanel({
           </button>
         </div>
       )}
-      {qrisZoom && (
-        <div
-          onClick={() => setQrisZoom(false)}
-          className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-black/85 p-6"
-        >
-          <Image
-            src="/qris.png"
-            alt="QRIS"
-            width={752}
-            height={752}
-            unoptimized
-            className="max-h-[68vh] w-auto max-w-full rounded-2xl bg-white p-3"
-          />
-          <p className="max-w-sm text-center text-sm font-bold text-white">
-            Minta pelanggan scan QR ini. Ketuk layar untuk menutup.
-          </p>
-        </div>
-      )}
+    </div>
+  );
+}
+
+function QrisZoom({ onTutup }) {
+  return (
+    <div
+      onClick={onTutup}
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-black/85 p-6"
+    >
+      <Image
+        src="/qris.png"
+        alt="QRIS"
+        width={752}
+        height={752}
+        unoptimized
+        className="max-h-[68vh] w-auto max-w-full rounded-2xl bg-white p-3"
+      />
+      <p className="max-w-sm text-center text-sm font-bold text-white">
+        Minta pelanggan scan QR ini. Ketuk layar untuk menutup.
+      </p>
     </div>
   );
 }
 
 export default function KasirPage() {
+  const api = useApi();
   const [produks, setProduks] = useState([]);
   const [kategoris, setKategoris] = useState([]);
   const [pengaturan, setPengaturan] = useState(null);
@@ -258,29 +266,18 @@ export default function KasirPage() {
   const [processing, setProcessing] = useState(false);
   const [struk, setStruk] = useState(null);
   const [cartOpen, setCartOpen] = useState(false);
-  const [flash, setFlash] = useState(null);
+  const [qrisZoom, setQrisZoom] = useState(false);
+  const [flash, flashMsg] = useFlash(2500);
 
-  const flashMsg = useCallback((text) => {
-    setFlash(text);
-    setTimeout(() => setFlash(null), 2500);
-  }, []);
-
-  const loadProduk = useCallback(async (tipe) => {
-    const res = await fetch("/api/produk?status=aktif");
-    if (res.ok) setProduks(await res.json());
-  }, []);
+  const loadProduk = useCallback(async () => {
+    setProduks(await api.get("/api/produk?status=aktif"));
+  }, [api]);
 
   useEffect(() => {
-    loadProduk();
-    fetch("/api/kategori")
-      .then((r) => r.json())
-      .then(setKategoris)
-      .catch(() => {});
-    fetch("/api/pengaturan")
-      .then((r) => r.json())
-      .then(setPengaturan)
-      .catch(() => {});
-  }, [loadProduk]);
+    loadProduk().catch(() => {});
+    api.get("/api/kategori").then(setKategoris).catch(() => {});
+    api.get("/api/pengaturan").then(setPengaturan).catch(() => {});
+  }, [api, loadProduk]);
 
   const filtered = useMemo(() => {
     let list = produks;
@@ -302,46 +299,45 @@ export default function KasirPage() {
   const uangKurang = metode === "Tunai" && nominalBayar > 0 && nominalBayar < total;
 
   function addToCart(p) {
-    setCart((prev) => {
-      const found = prev.find((c) => c.produkId === p.id);
-      if (found) {
-        if (found.qty >= p.stok) {
-          flashMsg(`Stok ${p.nama} hanya tersisa ${p.stok}`);
-          return prev;
-        }
-        return prev.map((c) =>
-          c.produkId === p.id ? { ...c, qty: c.qty + 1 } : c
-        );
+    const found = cart.find((c) => c.produkId === p.id);
+    if (found) {
+      if (found.qty >= p.stok) {
+        flashMsg(`Stok ${p.nama} hanya tersisa ${p.stok}`);
+        return;
       }
-      if (p.stok <= 0) {
-        flashMsg(`${p.nama} sudah habis`);
-        return prev;
-      }
-      return [
-        ...prev,
-        {
-          produkId: p.id,
-          nama: p.nama,
-          harga: p.harga,
-          satuan: p.satuan,
-          stok: p.stok,
-          qty: 1,
-          subtotal: p.harga,
-          catatan: "",
-          showCatatan: false,
-        },
-      ];
-    });
+      setCart((prev) =>
+        prev.map((c) => (c.produkId === p.id ? { ...c, qty: c.qty + 1 } : c))
+      );
+      return;
+    }
+    if (p.stok <= 0) {
+      flashMsg(`${p.nama} sudah habis`);
+      return;
+    }
+    setCart((prev) => [
+      ...prev,
+      {
+        produkId: p.id,
+        nama: p.nama,
+        harga: p.harga,
+        satuan: p.satuan,
+        stok: p.stok,
+        qty: 1,
+        catatan: "",
+        showCatatan: false,
+      },
+    ]);
   }
 
   function inc(produkId) {
+    const item = cart.find((c) => c.produkId === produkId);
+    if (item && item.qty >= item.stok) {
+      flashMsg(`Stok ${item.nama} hanya tersisa ${item.stok}`);
+      return;
+    }
     setCart((prev) =>
       prev.map((c) =>
-        c.produkId === produkId
-          ? c.qty >= c.stok
-            ? (flashMsg(`Stok ${c.nama} hanya tersisa ${c.stok}`), c)
-            : { ...c, qty: c.qty + 1 }
-          : c
+        c.produkId === produkId ? { ...c, qty: c.qty + 1 } : c
       )
     );
   }
@@ -396,43 +392,26 @@ export default function KasirPage() {
     }
     setProcessing(true);
     try {
-      const res = await fetch("/api/transaksi", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          items: cart.map((c) => ({
-            produkId: c.produkId,
-            qty: c.qty,
-            catatan: c.catatan || undefined,
-          })),
-          metodeBayar: metode,
-          jumlahBayar: metode === "Tunai" ? nominalBayar : total,
-        }),
+      const data = await api.post("/api/transaksi", {
+        items: cart.map((c) => ({
+          produkId: c.produkId,
+          qty: c.qty,
+          catatan: c.catatan || undefined,
+        })),
+        metodeBayar: metode,
+        jumlahBayar: metode === "Tunai" ? nominalBayar : total,
       });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || "Gagal memproses transaksi.");
-        return;
-      }
       setStruk(data.transaksi);
       setCart([]);
       setBayar("");
       setMetode("Tunai");
       setCartOpen(false);
-      loadProduk();
-    } catch {
-      setError("Terjadi kesalahan, coba lagi.");
+      loadProduk().catch(() => {});
+    } catch (e) {
+      setError(e.message || "Terjadi kesalahan, coba lagi.");
     } finally {
       setProcessing(false);
     }
-  }
-
-  function stokLabel(p) {
-    if (p.stok <= 0)
-      return <span className="rounded-full bg-warung-merah px-2 py-0.5 text-[10px] font-extrabold text-white">HABIS</span>;
-    if (p.stok <= 5)
-      return <span className="rounded-full bg-orange-200 px-2 py-0.5 text-[10px] font-extrabold text-orange-800">Sisa {p.stok}</span>;
-    return <span className="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-bold text-warung-hijau">{p.stok} {p.satuan}</span>;
   }
 
   return (
@@ -443,7 +422,7 @@ export default function KasirPage() {
         </h1>
         {flash && (
           <span className="max-w-full truncate rounded-full bg-warung-kuning px-4 py-2 text-sm font-extrabold text-warung-coklat shadow">
-            {flash}
+            {flash.text}
           </span>
         )}
       </div>
@@ -451,73 +430,39 @@ export default function KasirPage() {
       <div className="lg:grid lg:grid-cols-[180px_minmax(0,1fr)_280px] lg:items-start lg:gap-4">
         <aside className="hidden lg:block lg:sticky lg:top-24">
           <div className="rounded-2xl border-2 border-warung-kuningtua/30 bg-white p-3 shadow-sm">
-            <button
-              onClick={() => setKategoriAktif("semua")}
-              className={`mb-1 flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold transition ${
-                kategoriAktif === "semua"
-                  ? "bg-warung-kuning text-warung-coklat"
-                  : "text-warung-coklat hover:bg-warung-krem"
-              }`}
-            >
-              Semua
-            </button>
-            {kategoris.map((k) => (
-              <button
-                key={k.id}
-                onClick={() => setKategoriAktif(k.id)}
-                className={`mb-1 flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold transition ${
-                  kategoriAktif === k.id
-                    ? "bg-warung-kuning text-warung-coklat"
-                    : "text-warung-coklat hover:bg-warung-krem"
-                }`}
-              >
-                <span className="truncate">{k.nama}</span>
-              </button>
-            ))}
+            <FilterKategori
+              kategoris={kategoris}
+              aktif={kategoriAktif}
+              onPilih={setKategoriAktif}
+              varian="sidebar"
+            />
           </div>
         </aside>
 
-<section style={{ overflowY: "auto" }}>
+        <section>
           <input
             type="search"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-placeholder="🔍 Cari barang (cth: Indomie)..."
-            className="w-full rounded-xl border-2 border-amber-200 bg-white px-4 py-3 outline-none transition focus:border-warung-oranye lg:sticky lg:top-0" />
+            placeholder="Cari barang (cth: Indomie)..."
+            className="w-full rounded-xl border-2 border-amber-200 bg-white px-4 py-3 outline-none transition focus:border-warung-oranye lg:sticky lg:top-24 lg:z-10"
+          />
 
           <div className="mt-3 flex gap-2 overflow-x-auto pb-1 lg:hidden">
-            <button
-              onClick={() => setKategoriAktif("semua")}
-              className={`shrink-0 rounded-full px-4 py-2 text-sm font-bold transition ${
-                kategoriAktif === "semua"
-                  ? "bg-warung-kuning text-warung-coklat"
-                  : "bg-white text-warung-coklat"
-              }`}
-            >
-              Semua
-            </button>
-            {kategoris.map((k) => (
-              <button
-                key={k.id}
-                onClick={() => setKategoriAktif(k.id)}
-                className={`shrink-0 rounded-full px-4 py-2 text-sm font-bold transition ${
-                  kategoriAktif === k.id
-                    ? "bg-warung-kuning text-warung-coklat"
-                    : "bg-white text-warung-coklat"
-                }`}
-              >
-                {k.nama}
-              </button>
-            ))}
+            <FilterKategori
+              kategoris={kategoris}
+              aktif={kategoriAktif}
+              onPilih={setKategoriAktif}
+            />
           </div>
 
-          <div className="mt-4 grid grid-cols-3 gap-3">
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
             {filtered.map((p) => (
               <button
                 key={p.id}
                 onClick={() => addToCart(p)}
                 disabled={p.stok <= 0}
-                className="group flex flex-col rounded-2xl border-2 bg-white p-3 text-left min-w-0 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:opacity-50"
+                className="group flex min-w-0 flex-col rounded-2xl border-2 bg-white p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:opacity-50"
                 style={{ borderColor: p.kategori.warna + "55" }}
               >
                 <div className="flex flex-wrap items-start justify-between gap-1">
@@ -527,12 +472,12 @@ placeholder="🔍 Cari barang (cth: Indomie)..."
                   >
                     <span className="truncate">{p.kategori.nama}</span>
                   </span>
-                  {stokLabel(p)}
+                  <StokBadge stok={p.stok} satuan={p.satuan} ukuran="xs" />
                 </div>
-                <p className="mt-2 flex-1 text-sm font-extrabold leading-tight text-warung-coklat">
+                <p className="mt-2 flex-1 break-words text-sm font-extrabold leading-tight text-warung-coklat">
                   {p.nama}
                 </p>
-                <p className="mt-auto font-extrabold text-warung-oranye">
+                <p className="mt-auto flex-wrap break-words font-extrabold text-warung-oranye">
                   {rupiah(p.harga)}
                   <span className="text-[11px] font-bold text-warung-coklat/50">
                     /{p.satuan}
@@ -558,7 +503,6 @@ placeholder="🔍 Cari barang (cth: Indomie)..."
             bayar={bayar}
             setBayar={setBayar}
             kembalian={kembalian}
-            uangKurang={uangKurang}
             inc={inc}
             dec={dec}
             removeItem={removeItem}
@@ -566,6 +510,7 @@ placeholder="🔍 Cari barang (cth: Indomie)..."
             setCatatan={setCatatan}
             hapusSemua={hapusSemua}
             onSubmit={selesaikan}
+            onPerbesarQR={() => setQrisZoom(true)}
             processing={processing}
             error={error}
             setError={setError}
@@ -595,7 +540,6 @@ placeholder="🔍 Cari barang (cth: Indomie)..."
               bayar={bayar}
               setBayar={setBayar}
               kembalian={kembalian}
-              uangKurang={uangKurang}
               inc={inc}
               dec={dec}
               removeItem={removeItem}
@@ -603,6 +547,7 @@ placeholder="🔍 Cari barang (cth: Indomie)..."
               setCatatan={setCatatan}
               hapusSemua={hapusSemua}
               onSubmit={selesaikan}
+              onPerbesarQR={() => setQrisZoom(true)}
               processing={processing}
               error={error}
               setError={setError}
@@ -616,6 +561,8 @@ placeholder="🔍 Cari barang (cth: Indomie)..."
           </div>
         </div>
       )}
+
+      {qrisZoom && <QrisZoom onTutup={() => setQrisZoom(false)} />}
 
       {struk && (
         <StrukModal

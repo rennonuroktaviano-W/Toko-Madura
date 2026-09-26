@@ -35,7 +35,7 @@ export async function POST(request, ctx) {
       data: { stok: { increment: jumlah } },
       include: { kategori: true },
     });
-    return Response.json(updated);
+    return Response.json({ ...updated, jumlahDitambah: jumlah });
   } catch (e) {
     if (e?.code === "P2025") {
       return Response.json({ error: "Barang tidak ditemukan" }, { status: 404 });

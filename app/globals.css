@@ -6,8 +6,6 @@
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-display: var(--font-baloo);
@@ -18,18 +16,12 @@
   --color-warung-kuningtua: #f59e0b;
   --color-warung-oranye: #f97316;
   --color-warung-hijau: #14532d;
-  --color-warung-hijaumuda: #16a34a;
   --color-warung-merah: #dc2626;
   --color-warung-krem: #fff7e6;
   --color-warung-coklat: #5b3a1e;
-  --color-warung-orenmuda: #ffedd5;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-}
-
-.font-display {
-  font-family: var(--font-display);
 }

@@ -1,5 +1,8 @@
 import { prisma } from "@/lib/db";
 import { requireAuth, unauthorized } from "@/lib/api-auth";
+import { rentangHariWIB, tanggalValid, tanggalWIB } from "@/lib/wib";
+import { rupiah } from "@/lib/format";
+import { MAX_CATATAN } from "@/lib/validasi";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -12,38 +15,49 @@ export async function GET(request) {
   const dari = url.searchParams.get("dari");
   const sampai = url.searchParams.get("sampai");
 
-  const where = {};
-  if (dari) {
-    const start = new Date(`${dari}T00:00:00`);
-    if (!Number.isNaN(start.getTime())) {
-      where.tanggal = { ...(where.tanggal || {}), gte: start };
-    }
-  }
-  if (sampai) {
-    const end = new Date(`${sampai}T23:59:59.999`);
-    if (!Number.isNaN(end.getTime())) {
-      where.tanggal = { ...(where.tanggal || {}), lte: end };
+  for (const nilai of [dari, sampai]) {
+    if (nilai && !tanggalValid(nilai)) {
+      return Response.json({ error: "Tanggal tidak valid" }, { status: 400 });
     }
   }
 
-  const transaksis = await prisma.transaksi.findMany({
-    where,
-    include: {
-      kasir: { select: { id: true, nama: true } },
-      _count: { select: { items: true } },
+  const where = {};
+  if (dari) where.tanggal = { gte: rentangHariWIB(dari).gte };
+  if (sampai) {
+    where.tanggal = { ...(where.tanggal || {}), lt: rentangHariWIB(sampai).lt };
+  }
+
+  const [transaksis, agregat] = await Promise.all([
+    prisma.transaksi.findMany({
+      where,
+      include: {
+        kasir: { select: { id: true, nama: true } },
+        _count: { select: { items: true } },
+      },
+      orderBy: [{ tanggal: "desc" }, { id: "desc" }],
+      take: 200,
+    }),
+    prisma.transaksi.aggregate({
+      where,
+      _count: { _all: true },
+      _sum: { grandTotal: true },
+    }),
+  ]);
+
+  const jumlah = agregat._count._all;
+  return Response.json({
+    transaksis,
+    ringkasan: {
+      omzet: agregat._sum.grandTotal ?? 0,
+      jumlah,
+      terpotong: jumlah > transaksis.length,
     },
-    orderBy: { tanggal: "desc" },
-    take: 200,
   });
-  return Response.json(transaksis);
 }
 
 function generateNoTransaksi() {
-  const now = new Date();
-  const pad = (n) => String(n).padStart(2, "0");
-  const date = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}`;
   const rand = Math.random().toString(36).slice(2, 6).toUpperCase();
-  return `TRX-${date}-${rand}`;
+  return `TRX-${tanggalWIB().replaceAll("-", "")}-${rand}`;
 }
 
 export async function POST(request) {
@@ -78,7 +92,7 @@ export async function POST(request) {
     items.push({
       produkId,
       qty,
-      catatan: it?.catatan ? String(it.catatan).trim().slice(0, 200) : null,
+      catatan: it?.catatan ? String(it.catatan).trim().slice(0, MAX_CATATAN) : null,
     });
   }
 
@@ -120,7 +134,7 @@ export async function POST(request) {
     }
     if (jumlahBayar < grandTotal) {
       return Response.json(
-        { error: `Uang kurang: ${grandTotal - jumlahBayar}` },
+        { error: `Uang kurang: ${rupiah(grandTotal - jumlahBayar)}` },
         { status: 400 }
       );
     }

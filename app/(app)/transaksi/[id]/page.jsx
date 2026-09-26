@@ -1,29 +1,34 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import StrukModal from "@/components/StrukModal";
+import { useApi } from "@/lib/use-api";
 
 export default function DetailTransaksiPage() {
   const params = useParams();
   const router = useRouter();
+  const api = useApi();
   const [transaksi, setTransaksi] = useState(null);
   const [pengaturan, setPengaturan] = useState(null);
   const [error, setError] = useState("");
 
+  const load = useCallback(async () => {
+    try {
+      setTransaksi(await api.get(`/api/transaksi/${params.id}`));
+      api.get("/api/pengaturan").then(setPengaturan).catch(() => {});
+    } catch (e) {
+      setError(
+        e.status === 404
+          ? "Transaksi tidak ditemukan."
+          : e.message || "Gagal memuat transaksi."
+      );
+    }
+  }, [api, params.id]);
+
   useEffect(() => {
-    if (!params.id) return;
-    Promise.all([
-      fetch(`/api/transaksi/${params.id}`),
-      fetch("/api/pengaturan"),
-    ])
-      .then(async ([a, b]) => {
-        if (!a.ok) throw new Error("notfound");
-        setTransaksi(await a.json());
-        setPengaturan(await b.json());
-      })
-      .catch(() => setError("Transaksi tidak ditemukan."));
-  }, [params.id]);
+    if (params.id) load();
+  }, [load, params.id]);
 
   if (error) {
     return (

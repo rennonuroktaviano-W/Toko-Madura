@@ -1,24 +1,18 @@
 "use client";
 
-export function GarisDashed() {
+import { formatAngka, formatTanggalWaktu } from "@/lib/format";
+
+const rp = formatAngka;
+
+function GarisDashed() {
   return <div className="my-2 border-t border-dashed border-black/60" />;
 }
 
 export default function Struk({ transaksi, pengaturan }) {
-  const d = new Date(transaksi.tanggal);
-  const tanggal = d.toLocaleDateString("id-ID", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-  const jam = d.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
-  const rp = (n) => Number(n || 0).toLocaleString("id-ID");
+  const waktu = formatTanggalWaktu(transaksi.tanggal);
 
   return (
-    <div
-      id="struk-area"
-      className="mx-auto w-[300px] bg-white px-4 py-3 font-mono text-[13px] leading-snug text-black"
-    >
+    <div className="mx-auto w-[300px] bg-white px-4 py-3 font-mono text-[13px] leading-snug text-black">
       <div className="text-center">
         <p className="text-base font-extrabold tracking-tight">
           {pengaturan?.namaToko || "Warung Madura"}
@@ -36,7 +30,7 @@ export default function Struk({ transaksi, pengaturan }) {
           <span className="font-bold">No:</span> {transaksi.noTransaksi}
         </p>
         <p>
-          <span className="font-bold">Tgl:</span> {tanggal} {jam}
+          <span className="font-bold">Tgl:</span> {waktu}
         </p>
         <p>
           <span className="font-bold">Kasir:</span> {transaksi.kasir?.nama || "-"}

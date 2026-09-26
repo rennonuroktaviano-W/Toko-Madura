@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { requireAuth, unauthorized } from "@/lib/api-auth";
+import { namaValid } from "@/lib/validasi";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -9,12 +10,22 @@ export async function GET(request) {
   if (!user) return unauthorized();
 
   const url = new URL(request.url);
-  const kategoriId = url.searchParams.get("kategori");
-  const q = url.searchParams.get("q")?.trim();
+  const kategoriParam = url.searchParams.get("kategori");
+  const q = url.searchParams.get("q")?.trim().slice(0, 191);
   const status = url.searchParams.get("status");
 
+  if (status && !["aktif", "nonaktif", "semua"].includes(status)) {
+    return Response.json({ error: "Status tidak valid" }, { status: 400 });
+  }
+
   const where = {};
-  if (kategoriId && kategoriId !== "semua") where.kategoriId = Number(kategoriId);
+  if (kategoriParam && kategoriParam !== "semua") {
+    const kategoriId = Number(kategoriParam);
+    if (!Number.isInteger(kategoriId) || kategoriId <= 0) {
+      return Response.json({ error: "Kategori tidak valid" }, { status: 400 });
+    }
+    where.kategoriId = kategoriId;
+  }
   if (q) where.nama = { contains: q };
   if (status && status !== "semua") where.status = status;
 
@@ -45,8 +56,11 @@ export async function POST(request) {
   const fotoUrl = body?.fotoUrl ? String(body.fotoUrl).trim() : null;
   const status = body?.status === "nonaktif" ? "nonaktif" : "aktif";
 
-  if (!nama) {
-    return Response.json({ error: "Nama barang wajib diisi" }, { status: 400 });
+  if (!namaValid(nama)) {
+    return Response.json(
+      { error: "Nama barang wajib diisi, maksimal 191 karakter" },
+      { status: 400 }
+    );
   }
   if (!Number.isInteger(kategoriId) || kategoriId <= 0) {
     return Response.json({ error: "Pilih kategori barang" }, { status: 400 });

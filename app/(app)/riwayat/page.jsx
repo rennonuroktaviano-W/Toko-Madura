@@ -3,42 +3,42 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { rupiah, formatTanggalWaktu } from "@/lib/format";
+import { useApi } from "@/lib/use-api";
+import { tanggalWIB } from "@/lib/wib";
 
 export default function RiwayatPage() {
   const router = useRouter();
+  const api = useApi();
   const [transaksis, setTransaksis] = useState([]);
+  const [ringkasan, setRingkasan] = useState({ omzet: 0, jumlah: 0, terpotong: false });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [dari, setDari] = useState("");
   const [sampai, setSampai] = useState("");
-  const [totalOmzet, setTotalOmzet] = useState(0);
-  const [jumlahTrx, setJumlahTrx] = useState(0);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setError("");
     const params = new URLSearchParams();
     if (dari) params.set("dari", dari);
     if (sampai) params.set("sampai", sampai);
     try {
-      const res = await fetch(`/api/transaksi?${params.toString()}`);
-      if (!res.ok) throw new Error();
-      const data = await res.json();
-      setTransaksis(data);
-      setTotalOmzet(data.reduce((s, t) => s + t.grandTotal, 0));
-      setJumlahTrx(data.length);
+      const data = await api.get(`/api/transaksi?${params.toString()}`);
+      setTransaksis(data.transaksis);
+      setRingkasan(data.ringkasan);
+    } catch (e) {
+      setError(e.message);
     } finally {
       setLoading(false);
     }
-  }, [dari, sampai]);
+  }, [api, dari, sampai]);
 
   useEffect(() => {
     load();
   }, [load]);
 
   function hariIni() {
-    const d = new Date();
-    const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
-      d.getDate()
-    ).padStart(2, "0")}`;
+    const iso = tanggalWIB();
     setDari(iso);
     setSampai(iso);
   }
@@ -100,14 +100,27 @@ export default function RiwayatPage() {
           <p className="text-xs font-bold text-warung-coklat/60">
             Omzet di rentang ini
           </p>
-          <p className="break-words font-display text-xl font-extrabold text-warung-oranye sm:text-2xl">
-            {rupiah(totalOmzet)}
+          <p className="break-words font-display text-xl font-extrabold text-warung-oranje sm:text-2xl">
+            {rupiah(ringkasan.omzet)}
           </p>
           <p className="text-xs font-semibold text-warung-coklat/60">
-            {jumlahTrx} transaksi
+            {ringkasan.jumlah} transaksi
           </p>
         </div>
       </div>
+
+      {error && (
+        <div className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-bold text-warung-merah">
+          {error}
+        </div>
+      )}
+
+      {ringkasan.terpotong && !loading && (
+        <p className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm font-semibold text-warung-coklat/70">
+          Menampilkan {transaksis.length} transaksi terbaru. Saring rentang tanggal
+          agar omzet dan jumlahnya tetap bisa dibaca.
+        </p>
+      )}
 
       {loading ? (
         <p className="mt-10 text-center text-warung-coklat/60">Memuat...</p>

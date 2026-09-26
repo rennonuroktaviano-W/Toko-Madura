@@ -1,11 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useApi } from "@/lib/use-api";
+import { useFlash } from "@/lib/use-flash";
+import { MAX_NAMA } from "@/lib/validasi";
 
 const WARNA = [
   "#dc2626",
   "#f97316",
+  "#ea580c",
   "#f59e0b",
+  "#eab308",
   "#16a34a",
   "#2563eb",
   "#db2777",
@@ -16,33 +21,29 @@ const WARNA = [
 const emptyForm = { nama: "", warna: "#f59e0b" };
 
 export default function KategoriPage() {
+  const api = useApi();
   const [kategoris, setKategoris] = useState([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState(null);
   const [open, setOpen] = useState(false);
-  const [msg, setMsg] = useState(null);
   const [saving, setSaving] = useState(false);
+
+  const [msg, flash] = useFlash();
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch("/api/kategori");
-      if (!res.ok) throw new Error();
-      const data = await res.json();
-      setKategoris(data);
+      setKategoris(await api.get("/api/kategori"));
+    } catch (e) {
+      flash(e.message, "error");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [api, flash]);
 
   useEffect(() => {
     load();
   }, [load]);
-
-  function flash(text, type = "ok") {
-    setMsg({ text, type });
-    setTimeout(() => setMsg(null), 3000);
-  }
 
   function openAdd() {
     setEditId(null);
@@ -60,22 +61,16 @@ export default function KategoriPage() {
     e.preventDefault();
     setSaving(true);
     try {
-      const method = editId ? "PUT" : "POST";
-      const res = await fetch(editId ? `/api/kategori/${editId}` : "/api/kategori", {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        flash(data.error || "Gagal menyimpan", "error");
-        return;
+      if (editId) {
+        await api.put(`/api/kategori/${editId}`, form);
+      } else {
+        await api.post("/api/kategori", form);
       }
       flash(editId ? "Kategori diperbarui" : "Kategori ditambahkan");
       setOpen(false);
       load();
-    } catch {
-      flash("Terjadi kesalahan", "error");
+    } catch (err) {
+      flash(err.message, "error");
     } finally {
       setSaving(false);
     }
@@ -84,16 +79,11 @@ export default function KategoriPage() {
   async function handleDelete(k) {
     if (!window.confirm(`Hapus kategori "${k.nama}"?`)) return;
     try {
-      const res = await fetch(`/api/kategori/${k.id}`, { method: "DELETE" });
-      const data = await res.json();
-      if (!res.ok) {
-        flash(data.error || "Gagal menghapus", "error");
-        return;
-      }
+      await api.del(`/api/kategori/${k.id}`);
       flash("Kategori dihapus");
       load();
-    } catch {
-      flash("Terjadi kesalahan", "error");
+    } catch (err) {
+      flash(err.message, "error");
     }
   }
 
@@ -190,6 +180,7 @@ export default function KategoriPage() {
                 <input
                   type="text"
                   value={form.nama}
+                  maxLength={MAX_NAMA}
                   onChange={(e) => setForm({ ...form, nama: e.target.value })}
                   placeholder="cth: Jajanan Anak"
                   className="w-full rounded-xl border-2 border-amber-200 bg-warung-krem px-4 py-3 outline-none focus:border-warung-oranye"

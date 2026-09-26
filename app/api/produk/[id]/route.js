@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { requireAuth, unauthorized } from "@/lib/api-auth";
+import { namaValid } from "@/lib/validasi";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -33,12 +34,15 @@ export async function PUT(request, ctx) {
     body?.status === "aktif" || body?.status === "nonaktif"
       ? body.status
       : undefined;
-  const jumlahStokTambah =
-    body?.tambahStok !== undefined ? Math.round(Number(body.tambahStok)) : undefined;
 
   const data = {};
   if (nama !== undefined) {
-    if (!nama) return Response.json({ error: "Nama barang wajib diisi" }, { status: 400 });
+    if (!namaValid(nama)) {
+      return Response.json(
+        { error: "Nama barang wajib diisi, maksimal 191 karakter" },
+        { status: 400 }
+      );
+    }
     data.nama = nama;
   }
   if (kategoriId !== undefined) {

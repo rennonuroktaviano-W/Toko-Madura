@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { requireAuth, unauthorized } from "@/lib/api-auth";
+import { awalHariWIB, hariWIB, tambahHari, tanggalWIB } from "@/lib/wib";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -10,13 +11,9 @@ export async function GET() {
   const user = await requireAuth();
   if (!user) return unauthorized();
 
-  const now = new Date();
-  const startHariIni = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const endHariIni = new Date(startHariIni);
-  endHariIni.setDate(endHariIni.getDate() + 1);
-
-  const mulai7Hari = new Date(startHariIni);
-  mulai7Hari.setDate(mulai7Hari.getDate() - 6);
+  const startHariIni = awalHariWIB();
+  const endHariIni = tambahHari(startHariIni, 1);
+  const mulai7Hari = tambahHari(startHariIni, -6);
 
   const [
     omzetHariIni,
@@ -64,19 +61,21 @@ export async function GET() {
 
   const omzetPerHari = new Map();
   for (const t of transaksi7Hari) {
-    const d = new Date(t.tanggal);
-    const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+    const key = tanggalWIB(new Date(t.tanggal));
     omzetPerHari.set(key, (omzetPerHari.get(key) ?? 0) + (t.grandTotal ?? 0));
   }
 
   const tren7Hari = [];
   for (let i = 6; i >= 0; i--) {
-    const d = new Date(startHariIni);
-    d.setDate(d.getDate() - i);
+    const d = tambahHari(startHariIni, -i);
     tren7Hari.push({
-      label: HARI[d.getDay()],
-      tanggal: d.toLocaleDateString("id-ID", { day: "2-digit", month: "short" }),
-      omzet: omzetPerHari.get(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`) ?? 0,
+      label: HARI[hariWIB(d)],
+      tanggal: d.toLocaleDateString("id-ID", {
+        day: "2-digit",
+        month: "short",
+        timeZone: "Asia/Jakarta",
+      }),
+      omzet: omzetPerHari.get(tanggalWIB(d)) ?? 0,
     });
   }
 

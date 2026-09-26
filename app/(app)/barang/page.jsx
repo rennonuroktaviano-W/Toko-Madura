@@ -1,7 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { rupiah } from "@/lib/format";
+import { useApi } from "@/lib/use-api";
+import { useFlash } from "@/lib/use-flash";
+import { MAX_NAMA } from "@/lib/validasi";
+import StokBadge from "@/components/StokBadge";
 
 const SATUAN = ["pcs", "bungkus", "botol", "kaleng", "kg", "liter", "karung", "pack", "lembar"];
 
@@ -16,6 +20,7 @@ const emptyForm = {
 };
 
 export default function BarangPage() {
+  const api = useApi();
   const [produks, setProduks] = useState([]);
   const [kategoris, setKategoris] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -23,6 +28,7 @@ export default function BarangPage() {
   const [fKategori, setFKategori] = useState("semua");
   const [fStatus, setFStatus] = useState("semua");
   const [fQ, setFQ] = useState("");
+  const [cari, setCari] = useState("");
 
   const [openForm, setOpenForm] = useState(false);
   const [editId, setEditId] = useState(null);
@@ -33,37 +39,42 @@ export default function BarangPage() {
   const [restockJumlah, setRestockJumlah] = useState(5);
   const [restockLoading, setRestockLoading] = useState(false);
 
-  const [msg, setMsg] = useState(null);
+  const [msg, flash] = useFlash();
 
-  function flash(text, type = "ok") {
-    setMsg({ text, type });
-    setTimeout(() => setMsg(null), 3000);
-  }
+  const reqId = useRef(0);
+
+  useEffect(() => {
+    const t = setTimeout(() => setCari(fQ.trim()), 300);
+    return () => clearTimeout(t);
+  }, [fQ]);
 
   const loadData = useCallback(async () => {
     const params = new URLSearchParams();
     if (fKategori !== "semua") params.set("kategori", fKategori);
     if (fStatus !== "semua") params.set("status", fStatus);
-    if (fQ.trim()) params.set("q", fQ.trim());
+    if (cari) params.set("q", cari);
+
+    const id = ++reqId.current;
+    setLoading(true);
     try {
-      const res = await fetch(`/api/produk?${params.toString()}`);
-      if (!res.ok) throw new Error();
-      setProduks(await res.json());
+      const data = await api.get(`/api/produk?${params.toString()}`);
+      if (id !== reqId.current) return;
+      setProduks(data);
+    } catch (e) {
+      if (id !== reqId.current) return;
+      flash(e.message, "error");
     } finally {
-      setLoading(false);
+      if (id === reqId.current) setLoading(false);
     }
-  }, [fKategori, fStatus, fQ]);
+  }, [api, fKategori, fStatus, cari, flash]);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
 
   useEffect(() => {
-    fetch("/api/kategori")
-      .then((r) => r.json())
-      .then(setKategoris)
-      .catch(() => {});
-  }, []);
+    api.get("/api/kategori").then(setKategoris).catch(() => {});
+  }, [api]);
 
   function openAdd() {
     setEditId(null);
@@ -89,25 +100,17 @@ export default function BarangPage() {
     e.preventDefault();
     setSaving(true);
     try {
-      const payload = { ...form };
       if (editId) {
-        delete payload.stok;
-      }
-      const res = await fetch(editId ? `/api/produk/${editId}` : "/api/produk", {
-        method: editId ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        flash(data.error || "Gagal menyimpan", "error");
-        return;
+        const { stok: _stok, ...payload } = form;
+        await api.put(`/api/produk/${editId}`, payload);
+      } else {
+        await api.post("/api/produk", form);
       }
       flash(editId ? "Barang diperbarui" : "Barang ditambahkan");
       setOpenForm(false);
       loadData();
-    } catch {
-      flash("Terjadi kesalahan", "error");
+    } catch (err) {
+      flash(err.message, "error");
     } finally {
       setSaving(false);
     }
@@ -116,36 +119,27 @@ export default function BarangPage() {
   async function handleDelete(p) {
     if (!window.confirm(`Hapus barang "${p.nama}"?`)) return;
     try {
-      const res = await fetch(`/api/produk/${p.id}`, { method: "DELETE" });
-      const data = await res.json();
-      if (!res.ok) {
-        flash(data.error || "Gagal menghapus", "error");
-        return;
-      }
+      await api.del(`/api/produk/${p.id}`);
       flash("Barang dihapus");
       loadData();
-    } catch {
-      flash("Terjadi kesalahan", "error");
+    } catch (err) {
+      flash(err.message, "error");
     }
   }
 
   async function handleToggleStatus(p) {
     try {
       const next = p.status === "aktif" ? "nonaktif" : "aktif";
-      const res = await fetch(`/api/produk/${p.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: next }),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        flash(data.error || "Gagal mengubah status", "error");
-        return;
-      }
+      await api.put(`/api/produk/${p.id}`, { status: next });
       loadData();
-    } catch {
-      flash("Terjadi kesalahan", "error");
+    } catch (err) {
+      flash(err.message, "error");
     }
+  }
+
+  function openRestock(p) {
+    setRestockId(p.id);
+    setRestockJumlah(5);
   }
 
   async function handleRestock(e) {
@@ -153,44 +147,17 @@ export default function BarangPage() {
     if (!restockId) return;
     setRestockLoading(true);
     try {
-      const res = await fetch(`/api/produk/${restockId}/restock`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ jumlah: Number(restockJumlah) }),
+      const data = await api.post(`/api/produk/${restockId}/restock`, {
+        jumlah: Number(restockJumlah),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        flash(data.error || "Gagal restock", "error");
-        return;
-      }
-      flash(`Stok ${data.nama} ditambah ${restockJumlah} ${data.satuan}`);
+      flash(`Stok ${data.nama} ditambah ${data.jumlahDitambah} ${data.satuan}`);
       setRestockId(null);
       loadData();
-    } catch {
-      flash("Terjadi kesalahan", "error");
+    } catch (err) {
+      flash(err.message, "error");
     } finally {
       setRestockLoading(false);
     }
-  }
-
-  function StokBadge({ stok }) {
-    if (stok <= 0)
-      return (
-        <span className="rounded-full bg-warung-merah px-2.5 py-1 text-xs font-extrabold text-white">
-          HABIS
-        </span>
-      );
-    if (stok <= 5)
-      return (
-        <span className="rounded-full bg-orange-200 px-2.5 py-1 text-xs font-extrabold text-orange-800">
-          Sisa {stok} — Menipis!
-        </span>
-      );
-    return (
-      <span className="rounded-full bg-green-100 px-2.5 py-1 text-xs font-bold text-warung-hijau">
-        Stok {stok}
-      </span>
-    );
   }
 
   return (
@@ -293,18 +260,18 @@ export default function BarangPage() {
               </p>
 
               <div className="mt-2 flex items-center gap-2">
-                <StokBadge stok={p.stok} />
+                <StokBadge stok={p.stok} penanda="Menipis!" />
               </div>
 
               <div className="mt-4 grid grid-cols-2 gap-2">
                 <button
-                  onClick={openEdit.bind(null, p)}
+                  onClick={() => openEdit(p)}
                   className="rounded-lg bg-warung-krem px-3 py-2 text-sm font-bold text-warung-coklat transition hover:bg-amber-100"
                 >
                   Edit
                 </button>
                 <button
-                  onClick={() => setRestockId(p.id)}
+                  onClick={() => openRestock(p)}
                   className="rounded-lg bg-green-50 px-3 py-2 text-sm font-bold text-warung-hijau transition hover:bg-green-100"
                 >
                   Restock
@@ -346,6 +313,7 @@ export default function BarangPage() {
                 <input
                   type="text"
                   value={form.nama}
+                  maxLength={MAX_NAMA}
                   onChange={(e) => setForm({ ...form, nama: e.target.value })}
                   placeholder="cth: Indomie Goreng"
                   className="w-full rounded-xl border-2 border-amber-200 bg-warung-krem px-4 py-3 outline-none focus:border-warung-oranye"
@@ -485,8 +453,9 @@ export default function BarangPage() {
                 <input
                   type="number"
                   min="1"
+                  step="1"
                   value={restockJumlah}
-                  onChange={(e) => setRestockJumlah(e.target.value)}
+                  onChange={(e) => setRestockJumlah(Number(e.target.value))}
                   className="w-full rounded-xl border-2 border-amber-200 bg-warung-krem px-4 py-3 text-lg font-bold outline-none focus:border-warung-oranye"
                   required
                 />
