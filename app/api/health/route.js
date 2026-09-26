@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { databaseTerpasang } from "@/lib/adapter";
+import { databaseTerpasang, sslAktif } from "@/lib/adapter";
 import { PESAN_AUTH_SECRET } from "@/lib/auth";
 
 export const runtime = "nodejs";
@@ -14,29 +14,35 @@ export async function GET() {
     database_terpasang: Boolean(url),
     auth_secret_aman:
       Boolean(authSecret) && authSecret !== "warung-madura-dev-secret-change-me",
-    ssl_aktif:
-      Boolean(url) &&
-      ((process.env.DATABASE_SSL ?? "").toLowerCase() === "true" ||
-        ((process.env.DATABASE_SSL ?? "").toLowerCase() !== "false" &&
-          !["localhost", "127.0.0.1", "::1"].includes(url.hostname))),
+    ssl_aktif: sslAktif(url),
     db_menjawab: false,
     latensi_ms: null,
     error: null,
+    masalah: [],
   };
 
-  if (!Boolean(url)) laporan.error = "DATABASE_URL kosong atau tidak bisa di-parse.";
-  if (!Boolean(laporan.auth_secret_aman)) laporan.error = PESAN_AUTH_SECRET;
+  if (!laporan.database_terpasang) {
+    laporan.masalah.push("DATABASE_URL kosong atau tidak bisa di-parse.");
+  }
+  if (!laporan.auth_secret_aman) {
+    laporan.masalah.push(PESAN_AUTH_SECRET);
+  }
 
   const mulai = Date.now();
   try {
     await prisma.user.count();
     laporan.db_menjawab = true;
-    laporan.ok = true;
-    laporan.error = null;
   } catch (err) {
-    laporan.error = String(err?.message ?? err).slice(0, 300);
+    laporan.masalah.push(
+      err?.code
+        ? `Koneksi database gagal (${err.code}).`
+        : "Koneksi database gagal."
+    );
   }
   laporan.latensi_ms = Date.now() - mulai;
+
+  laporan.ok = laporan.masalah.length === 0;
+  laporan.error = laporan.masalah.length > 0 ? laporan.masalah.join(" ") : null;
 
   return Response.json(laporan, {
     status: laporan.ok ? 200 : 503,
