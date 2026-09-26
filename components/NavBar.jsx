@@ -22,12 +22,11 @@ export default function NavBar() {
   async function handleLogout() {
     await fetch("/api/logout", { method: "POST" });
     router.replace("/login");
-    router.refresh();
   }
 
   return (
     <>
-      <aside className="hidden lg:flex lg:w-64 lg:shrink-0 lg:flex-col bg-warung-hijau text-white">
+      <aside className="hidden lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-64 lg:shrink-0 lg:flex-col lg:overflow-y-auto bg-warung-hijau text-white">
         <div className="border-b border-white/10 px-6 py-5">
           <p className="font-display text-xl font-extrabold leading-tight">
             Warung Madura

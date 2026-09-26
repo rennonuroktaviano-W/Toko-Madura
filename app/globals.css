@@ -33,20 +33,3 @@ body {
 .font-display {
   font-family: var(--font-display);
 }
-
-@media print {
-  body * {
-    visibility: hidden;
-  }
-  #struk-area,
-  #struk-area * {
-    visibility: visible;
-  }
-  #struk-area {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 300px;
-    margin: 0;
-  }
-}

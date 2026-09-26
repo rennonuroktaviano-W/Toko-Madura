@@ -8,14 +8,18 @@ export default function StrukModal({ transaksi, pengaturan, onClose, buttonClose
   const ref = useRef(null);
   const [loading, setLoading] = useState(false);
 
+  async function generatePng() {
+    return toPng(ref.current, {
+      pixelRatio: 2,
+      backgroundColor: "#ffffff",
+    });
+  }
+
   async function handleDownload() {
     if (!ref.current) return;
     setLoading(true);
     try {
-      const dataUrl = await toPng(ref.current, {
-        pixelRatio: 2,
-        backgroundColor: "#ffffff",
-      });
+      const dataUrl = await generatePng();
       const link = document.createElement("a");
       link.download = `${transaksi.noTransaksi}.png`;
       link.href = dataUrl;
@@ -27,8 +31,55 @@ export default function StrukModal({ transaksi, pengaturan, onClose, buttonClose
     }
   }
 
-  function handlePrint() {
-    window.print();
+  async function handlePrint() {
+    if (!ref.current) return;
+    setLoading(true);
+    try {
+      const dataUrl = await generatePng();
+      const iframe = document.createElement("iframe");
+      Object.assign(iframe.style, {
+        position: "fixed",
+        left: "-9999px",
+        top: "0",
+        width: "412px",
+        height: "640px",
+        border: "0",
+      });
+      document.body.appendChild(iframe);
+      const win = iframe.contentWindow;
+      win.document.write(
+        `<!doctype html><html><head><title>Struk ${transaksi.noTransaksi}</title><style>` +
+          `*{margin:0;padding:0;box-sizing:border-box}` +
+          `body{display:flex;justify-content:center;padding:16px 0}` +
+          `img{width:300px;height:auto}` +
+          `@page{margin:0;size:auto}` +
+          `</style></head><body><img src="${dataUrl}" alt="Struk" /></body></html>`
+      );
+      win.document.close();
+
+      const cleanup = () => setTimeout(() => iframe.remove(), 500);
+      const doPrint = () => {
+        win.focus();
+        win.onafterprint = cleanup;
+        win.print();
+        cleanup();
+      };
+
+      const img = win.document.querySelector("img");
+      if (img.complete && img.naturalWidth > 0) {
+        doPrint();
+      } else {
+        img.onload = doPrint;
+        img.onerror = () => {
+          window.alert("Gagal membuat gambar struk.");
+          iframe.remove();
+        };
+      }
+    } catch {
+      window.alert("Gagal mencetak struk.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
