@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { rupiah } from "@/lib/format";
 import StrukModal from "@/components/StrukModal";
@@ -25,6 +26,8 @@ function CartPanel({
   error,
   setError,
 }) {
+  const [qrisZoom, setQrisZoom] = useState(false);
+
   return (
     <div className="rounded-2xl border-2 border-warung-kuningtua/30 bg-white p-4 shadow-sm">
       <div className="flex items-center justify-between">
@@ -46,7 +49,13 @@ function CartPanel({
           Belum ada barang. Klik produk untuk menambah.
         </p>
       ) : (
-        <div className="mt-3 max-h-72 space-y-3 overflow-y-auto lg:max-h-[22rem]">
+        <div
+          className={`mt-3 space-y-3 overflow-y-auto ${
+            metode === "QRIS"
+              ? "max-h-56 lg:max-h-[12rem]"
+              : "max-h-72 lg:max-h-[22rem]"
+          }`}
+        >
           {cart.map((c) => (
             <div key={c.produkId} className="rounded-xl border border-amber-100 p-3">
               <div className="flex items-start justify-between gap-2">
@@ -175,8 +184,26 @@ function CartPanel({
           )}
 
           {metode === "QRIS" && (
-            <div className="mt-3 rounded-xl bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-800">
-              Nominal dibayar = total belanja. Minta pelanggan scan kode QR.
+            <div className="mt-3 rounded-xl border-2 border-blue-100 bg-blue-50 p-3 text-center">
+              <button
+                type="button"
+                onClick={() => setQrisZoom(true)}
+                title="Perbesar QR"
+                className="mx-auto block w-full max-w-[200px] rounded-lg bg-white p-1 transition hover:bg-blue-100"
+              >
+                <Image
+                  src="/qris.png"
+                  alt="QRIS"
+                  width={752}
+                  height={752}
+                  unoptimized
+                  className="h-auto w-full object-contain"
+                />
+              </button>
+              <p className="mt-2 text-[11px] font-semibold leading-snug text-blue-800">
+                Minta pelanggan scan QR ini, lalu masukkan nominal {rupiah(total)}.
+                Ketuk QR untuk memperbesar.
+              </p>
             </div>
           )}
 
@@ -194,6 +221,24 @@ function CartPanel({
             {processing ? "Memproses..." : "Selesaikan Transaksi"}
           </button>
         </>
+      )}
+      {qrisZoom && (
+        <div
+          onClick={() => setQrisZoom(false)}
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-black/85 p-6"
+        >
+          <Image
+            src="/qris.png"
+            alt="QRIS"
+            width={752}
+            height={752}
+            unoptimized
+            className="max-h-[68vh] w-auto max-w-full rounded-2xl bg-white p-3"
+          />
+          <p className="max-w-sm text-center text-sm font-bold text-white">
+            Minta pelanggan scan QR ini. Ketuk layar untuk menutup.
+          </p>
+        </div>
       )}
     </div>
   );
