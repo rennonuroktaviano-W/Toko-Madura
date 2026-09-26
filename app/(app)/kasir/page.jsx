@@ -29,8 +29,8 @@ function CartPanel({
   const [qrisZoom, setQrisZoom] = useState(false);
 
   return (
-    <div className="rounded-2xl border-2 border-warung-kuningtua/30 bg-white p-4 shadow-sm">
-      <div className="flex items-center justify-between">
+    <div className="flex max-h-[calc(90dvh-8rem)] flex-col rounded-2xl border-2 border-warung-kuningtua/30 bg-white p-4 shadow-sm lg:max-h-[calc(100dvh-7rem)]">
+      <div className="flex shrink-0 items-center justify-between">
         <h2 className="font-display text-lg font-extrabold text-warung-coklat">
           Keranjang
         </h2>
@@ -44,171 +44,172 @@ function CartPanel({
         )}
       </div>
 
-      {cart.length === 0 ? (
-        <p className="mt-4 rounded-xl bg-warung-krem px-4 py-6 text-center text-sm text-warung-coklat/60">
-          Belum ada barang. Klik produk untuk menambah.
-        </p>
-      ) : (
-        <div
-          className={`mt-3 space-y-3 overflow-y-auto ${
-            metode === "QRIS"
-              ? "max-h-56 lg:max-h-[12rem]"
-              : "max-h-72 lg:max-h-[22rem]"
-          }`}
-        >
-          {cart.map((c) => (
-            <div key={c.produkId} className="rounded-xl border border-amber-100 p-3">
-              <div className="flex items-start justify-between gap-2">
-                <p className="min-w-0 font-bold text-warung-coklat">{c.nama}</p>
-                <button
-                  onClick={() => removeItem(c.produkId)}
-                  className="shrink-0 text-warung-merah"
-                  title="Hapus"
-                >
-                  ✕
-                </button>
-              </div>
-              <div className="mt-2 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-1">
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        {cart.length === 0 ? (
+          <p className="mt-4 rounded-xl bg-warung-krem px-4 py-6 text-center text-sm text-warung-coklat/60">
+            Belum ada barang. Klik produk untuk menambah.
+          </p>
+        ) : (
+          <div className="mt-3 space-y-3">
+            {cart.map((c) => (
+              <div key={c.produkId} className="rounded-xl border border-amber-100 p-3">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="min-w-0 font-bold text-warung-coklat">{c.nama}</p>
                   <button
-                    onClick={() => dec(c.produkId)}
-                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-warung-krem font-extrabold text-warung-coklat transition hover:bg-amber-100"
+                    onClick={() => removeItem(c.produkId)}
+                    className="shrink-0 text-warung-merah"
+                    title="Hapus"
                   >
-                    −
-                  </button>
-                  <span className="w-8 text-center font-extrabold text-warung-coklat">
-                    {c.qty}
-                  </span>
-                  <button
-                    onClick={() => inc(c.produkId)}
-                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-warung-kuning font-extrabold text-warung-coklat transition hover:bg-amber-400"
-                  >
-                    +
+                    ✕
                   </button>
                 </div>
-                <p className="font-bold text-warung-oranye">{rupiah(c.subtotal)}</p>
+                <div className="mt-2 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => dec(c.produkId)}
+                      className="flex h-8 w-8 items-center justify-center rounded-lg bg-warung-krem font-extrabold text-warung-coklat transition hover:bg-amber-100"
+                    >
+                      −
+                    </button>
+                    <span className="w-8 text-center font-extrabold text-warung-coklat">
+                      {c.qty}
+                    </span>
+                    <button
+                      onClick={() => inc(c.produkId)}
+                      className="flex h-8 w-8 items-center justify-center rounded-lg bg-warung-kuning font-extrabold text-warung-coklat transition hover:bg-amber-400"
+                    >
+                      +
+                    </button>
+                  </div>
+                  <p className="font-bold text-warung-oranye">{rupiah(c.subtotal)}</p>
+                </div>
+                <div className="mt-1 flex items-center justify-between gap-2">
+                  <p className="text-xs text-warung-coklat/50">
+                    {c.qty} x {rupiah(c.harga)} / {c.satuan}
+                  </p>
+                  <button
+                    onClick={() => toggleCatatan(c.produkId)}
+                    className="text-xs font-bold text-warung-hijau hover:underline"
+                  >
+                    {c.showCatatan ? "Tutup" : c.catatan ? "Ubah Catatan" : "Catatan"}
+                  </button>
+                </div>
+                {c.showCatatan && (
+                  <input
+                    type="text"
+                    value={c.catatan}
+                    onChange={(e) => setCatatan(c.produkId, e.target.value)}
+                    placeholder="Catatan (mis. No Gula)"
+                    className="mt-2 w-full rounded-lg border-2 border-amber-200 bg-warung-krem px-3 py-2 text-sm outline-none focus:border-warung-oranye"
+                  />
+                )}
               </div>
-              <div className="mt-1 flex items-center justify-between gap-2">
-                <p className="text-xs text-warung-coklat/50">
-                  {c.qty} x {rupiah(c.harga)} / {c.satuan}
-                </p>
-                <button
-                  onClick={() => toggleCatatan(c.produkId)}
-                  className="text-xs font-bold text-warung-hijau hover:underline"
-                >
-                  {c.showCatatan ? "Tutup" : c.catatan ? "Ubah Catatan" : "Catatan"}
-                </button>
-              </div>
-              {c.showCatatan && (
-                <input
-                  type="text"
-                  value={c.catatan}
-                  onChange={(e) => setCatatan(c.produkId, e.target.value)}
-                  placeholder="Catatan (mis. No Gula)"
-                  className="mt-2 w-full rounded-lg border-2 border-amber-200 bg-warung-krem px-3 py-2 text-sm outline-none focus:border-warung-oranye"
-                />
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {cart.length > 0 && (
-        <>
-          <div className="mt-4 border-t-2 border-dashed border-amber-200 pt-3 text-sm">
-            <p className="flex justify-between font-semibold text-warung-coklat/70">
-              <span>Jumlah item</span>
-              <span>{jumlahItem} item</span>
-            </p>
-            <p className="mt-1 flex justify-between text-lg font-extrabold text-warung-coklat">
-              <span>Total</span>
-              <span className="text-warung-oranye">{rupiah(total)}</span>
-            </p>
+            ))}
           </div>
+        )}
 
-          <div className="mt-3">
-            <p className="mb-1 text-sm font-bold text-warung-coklat">
-              Metode Bayar
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => {
-                  setMetode("Tunai");
-                  setError("");
-                }}
-                className={`rounded-xl px-3 py-2.5 font-extrabold transition ${
-                  metode === "Tunai"
-                    ? "bg-warung-kuning text-warung-coklat ring-2 ring-warung-oranye"
-                    : "bg-warung-krem text-warung-coklat hover:bg-amber-100"
-                }`}
-              >
-                Tunai
-              </button>
-              <button
-                onClick={() => {
-                  setMetode("QRIS");
-                  setError("");
-                }}
-                className={`rounded-xl px-3 py-2.5 font-extrabold transition ${
-                  metode === "QRIS"
-                    ? "bg-warung-kuning text-warung-coklat ring-2 ring-warung-oranye"
-                    : "bg-warung-krem text-warung-coklat hover:bg-amber-100"
-                }`}
-              >
-                QRIS
-              </button>
-            </div>
-          </div>
-
-          {metode === "Tunai" && (
-            <div className="mt-3">
-              <label className="mb-1 block text-sm font-bold text-warung-coklat">
-                Nominal Bayar
-              </label>
-              <input
-                type="number"
-                inputMode="numeric"
-                min="0"
-                value={bayar}
-                onChange={(e) => setBayar(e.target.value)}
-                placeholder="Masukkan nominal"
-                className="w-full rounded-xl border-2 border-amber-200 bg-warung-krem px-4 py-3 text-lg font-extrabold outline-none focus:border-warung-oranye"
-              />
-              {Number(bayar) > 0 && (
-                <p className="mt-2 flex justify-between text-sm font-bold text-warung-hijau">
-                  <span>Kembalian</span>
-                  <span>{rupiah(kembalian)}</span>
-                </p>
-              )}
-            </div>
-          )}
-
-          {metode === "QRIS" && (
-            <div className="mt-3 rounded-xl border-2 border-blue-100 bg-blue-50 p-3 text-center">
-              <button
-                type="button"
-                onClick={() => setQrisZoom(true)}
-                title="Perbesar QR"
-                className="mx-auto block w-full max-w-[200px] rounded-lg bg-white p-1 transition hover:bg-blue-100"
-              >
-                <Image
-                  src="/qris.png"
-                  alt="QRIS"
-                  width={752}
-                  height={752}
-                  unoptimized
-                  className="h-auto w-full object-contain"
-                />
-              </button>
-              <p className="mt-2 text-[11px] font-semibold leading-snug text-blue-800">
-                Minta pelanggan scan QR ini, lalu masukkan nominal {rupiah(total)}.
-                Ketuk QR untuk memperbesar.
+        {cart.length > 0 && (
+          <>
+            <div className="mt-4 border-t-2 border-dashed border-amber-200 pt-3 text-sm">
+              <p className="flex justify-between font-semibold text-warung-coklat/70">
+                <span>Jumlah item</span>
+                <span>{jumlahItem} item</span>
+              </p>
+              <p className="mt-1 flex justify-between text-lg font-extrabold text-warung-coklat">
+                <span>Total</span>
+                <span className="text-warung-oranye">{rupiah(total)}</span>
               </p>
             </div>
-          )}
 
+            <div className="mt-3">
+              <p className="mb-1 text-sm font-bold text-warung-coklat">
+                Metode Bayar
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => {
+                    setMetode("Tunai");
+                    setError("");
+                  }}
+                  className={`rounded-xl px-3 py-2.5 font-extrabold transition ${
+                    metode === "Tunai"
+                      ? "bg-warung-kuning text-warung-coklat ring-2 ring-warung-oranye"
+                      : "bg-warung-krem text-warung-coklat hover:bg-amber-100"
+                  }`}
+                >
+                  Tunai
+                </button>
+                <button
+                  onClick={() => {
+                    setMetode("QRIS");
+                    setError("");
+                    setQrisZoom(true);
+                  }}
+                  className={`rounded-xl px-3 py-2.5 font-extrabold transition ${
+                    metode === "QRIS"
+                      ? "bg-warung-kuning text-warung-coklat ring-2 ring-warung-oranye"
+                      : "bg-warung-krem text-warung-coklat hover:bg-amber-100"
+                  }`}
+                >
+                  QRIS
+                </button>
+              </div>
+            </div>
+
+            {metode === "Tunai" && (
+              <div className="mt-3">
+                <label className="mb-1 block text-sm font-bold text-warung-coklat">
+                  Nominal Bayar
+                </label>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min="0"
+                  value={bayar}
+                  onChange={(e) => setBayar(e.target.value)}
+                  placeholder="Masukkan nominal"
+                  className="w-full rounded-xl border-2 border-amber-200 bg-warung-krem px-4 py-3 text-lg font-extrabold outline-none focus:border-warung-oranye"
+                />
+                {Number(bayar) > 0 && (
+                  <p className="mt-2 flex justify-between text-sm font-bold text-warung-hijau">
+                    <span>Kembalian</span>
+                    <span>{rupiah(kembalian)}</span>
+                  </p>
+                )}
+              </div>
+            )}
+
+            {metode === "QRIS" && (
+              <div className="mt-3 rounded-xl border-2 border-blue-100 bg-blue-50 p-3 text-center">
+                <button
+                  type="button"
+                  onClick={() => setQrisZoom(true)}
+                  title="Perbesar QR"
+                  className="mx-auto block w-full max-w-[200px] rounded-lg bg-white p-1 transition hover:bg-blue-100"
+                >
+                  <Image
+                    src="/qris.png"
+                    alt="QRIS"
+                    width={752}
+                    height={752}
+                    unoptimized
+                    className="h-auto w-full object-contain"
+                  />
+                </button>
+                <p className="mt-2 text-[11px] font-semibold leading-snug text-blue-800">
+                  Minta pelanggan scan QR ini, lalu masukkan nominal {rupiah(total)}.
+                  Ketuk QR untuk memperbesar.
+                </p>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      {cart.length > 0 && (
+        <div className="shrink-0">
           {error && (
-            <div className="mt-3 rounded-xl bg-red-50 px-4 py-3 text-sm font-bold text-warung-merah">
+            <div className="mb-2 rounded-xl bg-red-50 px-4 py-3 text-sm font-bold text-warung-merah">
               {error}
             </div>
           )}
@@ -216,11 +217,11 @@ function CartPanel({
           <button
             onClick={onSubmit}
             disabled={processing || cart.length === 0}
-            className="mt-4 w-full rounded-xl border-b-4 border-green-700 bg-green-600 px-4 py-4 text-lg font-extrabold text-white transition hover:bg-green-500 active:border-b-0 active:translate-y-0.5 disabled:opacity-50"
+            className="w-full rounded-xl border-b-4 border-green-700 bg-green-600 px-4 py-4 text-lg font-extrabold text-white transition hover:bg-green-500 active:border-b-0 active:translate-y-0.5 disabled:opacity-50"
           >
             {processing ? "Memproses..." : "Selesaikan Transaksi"}
           </button>
-        </>
+        </div>
       )}
       {qrisZoom && (
         <div
@@ -583,8 +584,8 @@ placeholder="🔍 Cari barang (cth: Indomie)..."
 
       {cartOpen && (
         <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/50 lg:hidden">
-          <div className="max-h-[90vh] w-full overflow-y-auto rounded-t-3xl bg-warung-krem p-4">
-            <div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-amber-300" />
+          <div className="flex max-h-[90dvh] w-full flex-col overflow-y-auto rounded-t-3xl bg-warung-krem p-4">
+            <div className="mx-auto mb-3 h-1.5 w-12 shrink-0 rounded-full bg-amber-300" />
             <CartPanel
               cart={cartDetail}
               total={total}
@@ -608,7 +609,7 @@ placeholder="🔍 Cari barang (cth: Indomie)..."
             />
             <button
               onClick={() => setCartOpen(false)}
-              className="mt-3 w-full rounded-xl bg-warung-krem px-4 py-3 font-bold text-warung-coklat"
+              className="mt-3 w-full shrink-0 rounded-xl bg-warung-krem px-4 py-3 font-bold text-warung-coklat"
             >
               Tutup Keranjang
             </button>
