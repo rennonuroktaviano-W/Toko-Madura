@@ -1,10 +1,11 @@
 import { prisma } from "@/lib/db";
 import { requireAuth, unauthorized } from "@/lib/api-auth";
+import { denganDb } from "@/lib/api-error";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET(request, ctx) {
+export const GET = denganDb(async (request, ctx) => {
   const user = await requireAuth();
   if (!user) return unauthorized();
 
@@ -23,4 +24,4 @@ export async function GET(request, ctx) {
   }
 
   return Response.json(transaksi);
-}
+}, "GET /api/transaksi/[id]");

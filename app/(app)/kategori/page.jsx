@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useApi } from "@/lib/use-api";
 import { useFlash } from "@/lib/use-flash";
 import { MAX_NAMA } from "@/lib/validasi";
+import BelumSiap from "@/components/BelumSiap";
 
 const WARNA = [
   "#dc2626",
@@ -24,6 +25,8 @@ export default function KategoriPage() {
   const api = useApi();
   const [kategoris, setKategoris] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [belumSiap, setBelumSiap] = useState(false);
+  const [pesanBelumSiap, setPesanBelumSiap] = useState("");
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState(null);
   const [open, setOpen] = useState(false);
@@ -34,8 +37,15 @@ export default function KategoriPage() {
   const load = useCallback(async () => {
     try {
       setKategoris(await api.get("/api/kategori"));
+      setBelumSiap(false);
+      setPesanBelumSiap("");
     } catch (e) {
-      flash(e.message, "error");
+      if (e.kode) {
+        setBelumSiap(true);
+        setPesanBelumSiap(e.message);
+      } else {
+        flash(e.message, "error");
+      }
     } finally {
       setLoading(false);
     }
@@ -118,7 +128,11 @@ export default function KategoriPage() {
         </div>
       )}
 
-      {loading ? (
+      {belumSiap ? (
+        <div className="mt-6">
+          <BelumSiap pesan={pesanBelumSiap} onCobaLagi={load} />
+        </div>
+      ) : loading ? (
         <p className="mt-10 text-center text-warung-coklat/60">Memuat...</p>
       ) : (
         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">

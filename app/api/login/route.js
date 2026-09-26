@@ -6,6 +6,7 @@ import {
   createSessionToken,
   sessionCookieOptions,
 } from "@/lib/auth";
+import { KODE, klasifikasiError, respondError } from "@/lib/api-error";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -79,28 +80,11 @@ export async function POST(request) {
       { headers: { "Server-Timing": `${geserDb}, ${geserBcrypt}, total;dur=${(performance.now() - mulai).toFixed(1)}` } }
     );
   } catch (err) {
-    const pesan = String(err?.message ?? "");
-    const konfigurasi =
-      /DATABASE_URL belum diset/.test(pesan) || /AUTH_SECRET belum diset/.test(pesan);
-    const dbJebol =
-      konfigurasi ||
-      err?.code === "P1001" ||
-      err?.code === "P1002" ||
-      err?.code === "P2039" ||
-      /connect|timeout|ECONNREFUSED|ER_ACCESS_DENIED|ER_GET_CONNECTION|pool|SSL/i.test(
-        pesan
-      );
-
-    return Response.json(
-      {
-        error: konfigurasi
-          ? "Server belum dikonfigurasi lengkap (lihat /api/health)."
-          : dbJebol
-            ? "Database tidak bisa dihubungi. Coba lagi sebentar."
-            : "Terjadi kesalahan di server. Coba lagi.",
-        detail: process.env.NODE_ENV === "production" ? undefined : pesan,
-      },
-      { status: dbJebol ? 503 : 500, ...timing(`total;dur=${(performance.now() - mulai).toFixed(1)}`) }
-    );
+    const kode = klasifikasiError(err) ?? KODE.INTERNAL;
+    const res = respondError(kode, {
+      detail: process.env.NODE_ENV === "production" ? undefined : String(err?.message ?? err),
+    });
+    res.headers.set("Server-Timing", `total;dur=${(performance.now() - mulai).toFixed(1)}`);
+    return res;
   }
 }

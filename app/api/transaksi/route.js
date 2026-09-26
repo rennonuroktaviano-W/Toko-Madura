@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { requireAuth, unauthorized } from "@/lib/api-auth";
+import { denganDb } from "@/lib/api-error";
 import { rentangHariWIB, tanggalValid, tanggalWIB } from "@/lib/wib";
 import { rupiah } from "@/lib/format";
 import { MAX_CATATAN } from "@/lib/validasi";
@@ -7,7 +8,7 @@ import { MAX_CATATAN } from "@/lib/validasi";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET(request) {
+export const GET = denganDb(async (request) => {
   const user = await requireAuth();
   if (!user) return unauthorized();
 
@@ -53,14 +54,14 @@ export async function GET(request) {
       terpotong: jumlah > transaksis.length,
     },
   });
-}
+}, "GET /api/transaksi");
 
 function generateNoTransaksi() {
   const rand = Math.random().toString(36).slice(2, 6).toUpperCase();
   return `TRX-${tanggalWIB().replaceAll("-", "")}-${rand}`;
 }
 
-export async function POST(request) {
+export const POST = denganDb(async (request) => {
   const user = await requireAuth();
   if (!user) return unauthorized();
 
@@ -201,4 +202,4 @@ export async function POST(request) {
   }
 
   return Response.json({ transaksi }, { status: 201 });
-}
+}, "POST /api/transaksi");

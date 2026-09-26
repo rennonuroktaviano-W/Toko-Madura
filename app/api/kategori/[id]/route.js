@@ -1,11 +1,12 @@
 import { prisma } from "@/lib/db";
 import { requireAuth, unauthorized } from "@/lib/api-auth";
+import { denganDb } from "@/lib/api-error";
 import { namaValid, warnaValid } from "@/lib/validasi";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function PUT(request, ctx) {
+export const PUT = denganDb(async (request, ctx) => {
   const user = await requireAuth();
   if (!user) return unauthorized();
 
@@ -57,9 +58,9 @@ export async function PUT(request, ctx) {
     }
     throw e;
   }
-}
+}, "PUT /api/kategori/[id]");
 
-export async function DELETE(request, ctx) {
+export const DELETE = denganDb(async (request, ctx) => {
   const user = await requireAuth();
   if (!user) return unauthorized();
 
@@ -84,4 +85,4 @@ export async function DELETE(request, ctx) {
     }
     throw e;
   }
-}
+}, "DELETE /api/kategori/[id]");

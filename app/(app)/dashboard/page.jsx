@@ -4,19 +4,23 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { rupiah, formatRupiahSingkat } from "@/lib/format";
 import { useApi } from "@/lib/use-api";
+import BelumSiap from "@/components/BelumSiap";
 
 export default function DashboardPage() {
   const router = useRouter();
   const api = useApi();
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
+  const [belumSiap, setBelumSiap] = useState(false);
 
   const load = useCallback(async () => {
     setError("");
     try {
       setData(await api.get("/api/dashboard"));
+      setBelumSiap(false);
     } catch (e) {
       setError(e.message);
+      setBelumSiap(Boolean(e.kode));
     }
   }, [api]);
 
@@ -58,7 +62,11 @@ export default function DashboardPage() {
         </button>
       </div>
 
-      {error ? (
+      {belumSiap ? (
+        <div className="mt-10">
+          <BelumSiap pesan={error} onCobaLagi={load} />
+        </div>
+      ) : error ? (
         <div className="mt-10 text-center">
           <p className="font-bold text-warung-merah">{error}</p>
           <button

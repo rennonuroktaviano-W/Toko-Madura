@@ -14,8 +14,8 @@ export default function Error({ error, reset }) {
         Ada yang tidak beres
       </h1>
       <p className="max-w-md text-sm text-warung-coklat/70">
-        Halaman ini gagal dimuat. Coba muat ulang. Kalau tetap sama, cek
-        koneksi database dulu.
+        Halaman ini gagal dimuat. Coba muat ulang. Kalau tetap sama, hubungi
+        admin.
       </p>
       <div className="flex flex-wrap justify-center gap-2">
         <button

@@ -1,11 +1,12 @@
 import { prisma } from "@/lib/db";
 import { requireAuth, unauthorized } from "@/lib/api-auth";
+import { denganDb } from "@/lib/api-error";
 import { namaValid } from "@/lib/validasi";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET(request) {
+export const GET = denganDb(async (request) => {
   const user = await requireAuth();
   if (!user) return unauthorized();
 
@@ -35,9 +36,9 @@ export async function GET(request) {
     orderBy: { nama: "asc" },
   });
   return Response.json(produks);
-}
+}, "GET /api/produk");
 
-export async function POST(request) {
+export const POST = denganDb(async (request) => {
   const user = await requireAuth();
   if (!user) return unauthorized();
 
@@ -87,4 +88,4 @@ export async function POST(request) {
     include: { kategori: true },
   });
   return Response.json(created, { status: 201 });
-}
+}, "POST /api/produk");

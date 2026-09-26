@@ -1,10 +1,11 @@
 import { prisma } from "@/lib/db";
 import { requireAuth, unauthorized } from "@/lib/api-auth";
+import { denganDb } from "@/lib/api-error";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function POST(request, ctx) {
+export const POST = denganDb(async (request, ctx) => {
   const user = await requireAuth();
   if (!user) return unauthorized();
 
@@ -42,4 +43,4 @@ export async function POST(request, ctx) {
     }
     throw e;
   }
-}
+}, "POST /api/produk/[id]/restock");

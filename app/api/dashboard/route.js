@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { requireAuth, unauthorized } from "@/lib/api-auth";
+import { denganDb } from "@/lib/api-error";
 import { awalHariWIB, hariWIB, tambahHari, tanggalWIB } from "@/lib/wib";
 
 export const runtime = "nodejs";
@@ -7,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 const HARI = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
 
-export async function GET() {
+export const GET = denganDb(async () => {
   const user = await requireAuth();
   if (!user) return unauthorized();
 
@@ -94,4 +95,4 @@ export async function GET() {
     stokMenipis,
     tren7Hari,
   });
-}
+}, "GET /api/dashboard");

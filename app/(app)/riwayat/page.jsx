@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { rupiah, formatTanggalWaktu } from "@/lib/format";
 import { useApi } from "@/lib/use-api";
 import { tanggalWIB } from "@/lib/wib";
+import BelumSiap from "@/components/BelumSiap";
 
 export default function RiwayatPage() {
   const router = useRouter();
@@ -13,6 +14,7 @@ export default function RiwayatPage() {
   const [ringkasan, setRingkasan] = useState({ omzet: 0, jumlah: 0, terpotong: false });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [belumSiap, setBelumSiap] = useState(false);
   const [dari, setDari] = useState("");
   const [sampai, setSampai] = useState("");
 
@@ -26,8 +28,10 @@ export default function RiwayatPage() {
       const data = await api.get(`/api/transaksi?${params.toString()}`);
       setTransaksis(data.transaksis);
       setRingkasan(data.ringkasan);
+      setBelumSiap(false);
     } catch (e) {
       setError(e.message);
+      setBelumSiap(Boolean(e.kode));
     } finally {
       setLoading(false);
     }
@@ -109,10 +113,16 @@ export default function RiwayatPage() {
         </div>
       </div>
 
-      {error && (
-        <div className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-bold text-warung-merah">
-          {error}
+      {belumSiap ? (
+        <div className="mt-4">
+          <BelumSiap pesan={error} onCobaLagi={load} />
         </div>
+      ) : (
+        error && (
+          <div className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-bold text-warung-merah">
+            {error}
+          </div>
+        )
       )}
 
       {ringkasan.terpotong && !loading && (

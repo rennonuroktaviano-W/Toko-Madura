@@ -6,6 +6,7 @@ import { useApi } from "@/lib/use-api";
 import { useFlash } from "@/lib/use-flash";
 import { MAX_NAMA } from "@/lib/validasi";
 import StokBadge from "@/components/StokBadge";
+import BelumSiap from "@/components/BelumSiap";
 
 const SATUAN = ["pcs", "bungkus", "botol", "kaleng", "kg", "liter", "karung", "pack", "lembar"];
 
@@ -24,6 +25,8 @@ export default function BarangPage() {
   const [produks, setProduks] = useState([]);
   const [kategoris, setKategoris] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [belumSiap, setBelumSiap] = useState(false);
+  const [pesanBelumSiap, setPesanBelumSiap] = useState("");
 
   const [fKategori, setFKategori] = useState("semua");
   const [fStatus, setFStatus] = useState("semua");
@@ -60,9 +63,16 @@ export default function BarangPage() {
       const data = await api.get(`/api/produk?${params.toString()}`);
       if (id !== reqId.current) return;
       setProduks(data);
+      setBelumSiap(false);
+      setPesanBelumSiap("");
     } catch (e) {
       if (id !== reqId.current) return;
-      flash(e.message, "error");
+      if (e.kode) {
+        setBelumSiap(true);
+        setPesanBelumSiap(e.message);
+      } else {
+        flash(e.message, "error");
+      }
     } finally {
       if (id === reqId.current) setLoading(false);
     }
@@ -222,7 +232,11 @@ export default function BarangPage() {
         </div>
       )}
 
-      {loading ? (
+      {belumSiap ? (
+        <div className="mt-6">
+          <BelumSiap pesan={pesanBelumSiap} onCobaLagi={loadData} />
+        </div>
+      ) : loading ? (
         <p className="mt-10 text-center text-warung-coklat/60">Memuat...</p>
       ) : (
         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">

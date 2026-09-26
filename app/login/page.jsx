@@ -16,11 +16,13 @@ export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [belumSiap, setBelumSiap] = useState(false);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
+    setBelumSiap(false);
     setLoading(true);
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 15000);
@@ -34,6 +36,7 @@ export default function LoginPage() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
+        setBelumSiap(Boolean(data.kode));
         setError(data.error || "Login gagal, coba lagi");
         return;
       }
@@ -98,7 +101,13 @@ export default function LoginPage() {
           </div>
 
           {error && (
-            <div className="rounded-lg bg-red-50 px-3 py-2 text-sm font-semibold text-warung-merah">
+            <div
+              className={`rounded-lg px-3 py-2 text-sm font-semibold ${
+                belumSiap
+                  ? "bg-amber-50 text-warung-coklat"
+                  : "bg-red-50 text-warung-merah"
+              }`}
+            >
               {error}
             </div>
           )}
