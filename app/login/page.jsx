@@ -3,6 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+function tujuanSetelahLogin() {
+  const next = new URLSearchParams(window.location.search).get("next");
+  if (next && next.startsWith("/") && !next.startsWith("//") && !next.startsWith("/login")) {
+    return next;
+  }
+  return "/kasir";
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [username, setUsername] = useState("");
@@ -14,24 +22,30 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 15000);
     try {
       const res = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        cache: "no-store",
+        signal: controller.signal,
         body: JSON.stringify({ username, password }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setError(data.error || "Login gagal, coba lagi");
         return;
       }
-      const next =
-        new URLSearchParams(window.location.search).get("next") || "/dashboard";
-      router.replace(next);
-      router.refresh();
+      router.replace(tujuanSetelahLogin());
     } catch (err) {
-      setError("Terjadi kesalahan, coba lagi.");
+      setError(
+        err?.name === "AbortError"
+          ? "Server tidak merespons dalam 15 detik. Periksa koneksi internet lalu coba lagi."
+          : "Terjadi kesalahan, coba lagi."
+      );
     } finally {
+      clearTimeout(timer);
       setLoading(false);
     }
   }

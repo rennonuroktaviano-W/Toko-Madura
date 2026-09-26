@@ -15,7 +15,20 @@ export async function GET() {
   const endHariIni = new Date(startHariIni);
   endHariIni.setDate(endHariIni.getDate() + 1);
 
-  const [omzetHariIni, jmlTrxHariIni, jmlItemHariIni, omzetTotal, jmlTrxTotal, produkAktif, barangTerlaris, stokMenipis] =
+  const mulai7Hari = new Date(startHariIni);
+  mulai7Hari.setDate(mulai7Hari.getDate() - 6);
+
+  const [
+    omzetHariIni,
+    jmlTrxHariIni,
+    jmlItemHariIni,
+    omzetTotal,
+    jmlTrxTotal,
+    produkAktif,
+    barangTerlaris,
+    stokMenipis,
+    transaksi7Hari,
+  ] =
     await Promise.all([
       prisma.transaksi.aggregate({
         _sum: { grandTotal: true },
@@ -43,23 +56,27 @@ export async function GET() {
         include: { kategori: true },
         take: 8,
       }),
+      prisma.transaksi.findMany({
+        where: { tanggal: { gte: mulai7Hari, lt: endHariIni } },
+        select: { tanggal: true, grandTotal: true },
+      }),
     ]);
+
+  const omzetPerHari = new Map();
+  for (const t of transaksi7Hari) {
+    const d = new Date(t.tanggal);
+    const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+    omzetPerHari.set(key, (omzetPerHari.get(key) ?? 0) + (t.grandTotal ?? 0));
+  }
 
   const tren7Hari = [];
   for (let i = 6; i >= 0; i--) {
-    const d = new Date();
+    const d = new Date(startHariIni);
     d.setDate(d.getDate() - i);
-    const mulail = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-    const mulail2 = new Date(mulail);
-    mulail2.setDate(mulail2.getDate() + 1);
-    const agg = await prisma.transaksi.aggregate({
-      _sum: { grandTotal: true },
-      where: { tanggal: { gte: mulail, lt: mulail2 } },
-    });
     tren7Hari.push({
       label: HARI[d.getDay()],
       tanggal: d.toLocaleDateString("id-ID", { day: "2-digit", month: "short" }),
-      omzet: agg._sum.grandTotal ?? 0,
+      omzet: omzetPerHari.get(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`) ?? 0,
     });
   }
 
