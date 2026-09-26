@@ -3,20 +3,22 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { rupiah, formatRupiahSingkat } from "@/lib/format";
+import { useApi } from "@/lib/use-api";
 
 export default function DashboardPage() {
   const router = useRouter();
+  const api = useApi();
   const [data, setData] = useState(null);
+  const [error, setError] = useState("");
 
   const load = useCallback(async () => {
+    setError("");
     try {
-      const res = await fetch("/api/dashboard");
-      if (!res.ok) throw new Error();
-      setData(await res.json());
-    } catch {
-      setData({ error: true });
+      setData(await api.get("/api/dashboard"));
+    } catch (e) {
+      setError(e.message);
     }
-  }, []);
+  }, [api]);
 
   useEffect(() => {
     load();
@@ -56,12 +58,18 @@ export default function DashboardPage() {
         </button>
       </div>
 
-      {!data ? (
+      {error ? (
+        <div className="mt-10 text-center">
+          <p className="font-bold text-warung-merah">{error}</p>
+          <button
+            onClick={load}
+            className="mt-4 rounded-xl bg-warung-kuning px-5 py-3 font-extrabold text-warung-coklat transition hover:bg-amber-400"
+          >
+            Coba Lagi
+          </button>
+        </div>
+      ) : !data ? (
         <p className="mt-10 text-center text-warung-coklat/60">Memuat dashboard...</p>
-      ) : data.error ? (
-        <p className="mt-10 text-center text-warung-coklat/60">
-          Gagal memuat data dashboard.
-        </p>
       ) : (
         <>
           <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
