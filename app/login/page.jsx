@@ -120,10 +120,6 @@ export default function LoginPage() {
             {loading ? "Masuk..." : "Masuk"}
           </button>
         </form>
-
-        <p className="mt-5 text-center text-xs text-warung-coklat/60">
-          Akun demo: <b>admin</b> / <b>admin123</b>
-        </p>
       </div>
     </div>
   );

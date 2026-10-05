@@ -1,151 +1,225 @@
-# Kasir Warung Madura
+# Toko Madura App
 
-Aplikasi kasir (point of sale) untuk warung kelontong Madura. Dibuat dengan
-Next.js 16 (App Router, Turbopack) + Prisma 7 + MySQL/MariaDB.
+Aplikasi kasir sederhana untuk Toko Madura dengan fitur manajemen produk, kategori, transaksi, dan riwayat penjualan.
 
-## Fitur
+## Teknologi
 
-- **Kasir** — keranjang, pencarian barang, pilih metode bayar (Tunai / QRIS),
-  cetak struk, riwayat pesanan, upload foto barang.
-- **Barang** — CRUD barang, restock, filter kategori/status, penanda stok menipis.
-- **Kategori** — CRUD kategori dengan warna.
-- **Riwayat** — daftar transaksi dengan filter rentang tanggal + ringkasan omzet.
-- **Dashboard** — omzet hari ini, tren 7 hari, barang terlaris, stok menipis.
-- **Login** — session cookie ditandatangani dengan `AUTH_SECRET` (HMAC via `jose`),
-  dilindungi `proxy.js` (middleware).
+- [Next.js](https://nextjs.org/) 16 (App Router)
+- [Prisma ORM](https://www.prisma.io/) dengan adapter MariaDB
+- [bcryptjs](https://github.com/dcodeIO/bcrypt.js) untuk hashing password
+- [jose](https://github.com/panva/jose) untuk JWT session
+- [Tailwind CSS v4](https://tailwindcss.com/)
 
-## Menjalankan di lokal
+## Persyaratan
 
-Butuh Node.js >= 20 dan MySQL/MariaDB yang sudah jalan.
+- Node.js >= 20
+- MariaDB/MySQL 5.7+ atau 8.x
+- npm atau pnpm
 
+## Setup Lokal
+
+1. Clone repository
+```bash
+git clone <repo-url>
+cd toko-madura-app
+```
+
+2. Install dependencies
 ```bash
 npm install
-cp .env.example .env      # lalu isi DATABASE_URL & AUTH_SECRET
-npm run db:setup          # prisma migrate deploy + prisma db seed
+```
+
+3. Salin file environment
+```bash
+cp .env.example .env
+```
+
+4. Konfigurasi `.env`
+```env
+DATABASE_URL="mysql://user:password@localhost:3306/toko_madura"
+AUTH_SECRET="ganti-dengan-random-string-minimal-32-karakter"
+COOKIE_SECURE="false" # set true hanya jika akses via HTTPS
+NODE_ENV="development"
+```
+
+5. Generate Prisma Client
+```bash
+npx prisma generate
+```
+
+6. Migrasi database
+```bash
+npx prisma migrate deploy
+```
+
+7. Seed data (opsional, membuat admin dengan password default)
+```bash
+npm run db:seed
+```
+
+8. Pastikan semuanya siap
+```bash
+npm run admin:cek -- --password "admin123"
+```
+
+9. Jalankan development server
+```bash
 npm run dev
 ```
 
-Buka http://localhost:3000 · akun demo: `admin` / `admin123`
+Aplikasi akan berjalan di `http://localhost:3000`
 
-### Variabel environment
+## Akun Admin
 
-| Nama | Wajib | Keterangan |
-|---|---|---|
-| `DATABASE_URL` | ya | `mysql://USER:PASSWORD@HOST:PORT/NAMA_DB` |
-| `AUTH_SECRET` | ya | Random minimal 32 karakter. Jangan pakai nilai default dev. |
-| `DATABASE_SSL` | tidak | `true`/`false` untuk override otomatis SSL. Default: aktif untuk host non-localhost. |
+Setelah seed, user `admin` dibuat dengan password default `admin123`.
 
-`DATABASE_URL` boleh ditulis **dengan atau tanpa tanda kutip** — `lib/adapter.js`
-membuang kutip yang membungkus nilai (`buangKutip`).
+**Ganti password sebelum dipakai client:**
+```bash
+npm run admin:reset -- --password "PasswordKuatClient123"
+```
 
-Buat `AUTH_SECRET` dengan:
+> `npm run db:seed` **tidak** lagi mengubah password admin yang sudah ada. Seed hanya membuat akun admin kalau belum ada, jadi aman dijalankan ulang di production.
+
+## Deployment
+
+### Vercel
+- Build command: `prisma generate && next build`
+- Install command: `npm install`
+- Set environment variables di Vercel:
+  - `DATABASE_URL` (MySQL/MariaDB)
+  - `AUTH_SECRET` (minimal 32 karakter, random)
+  - `COOKIE_SECURE` (opsional, default `true` di production. Set `false` jika testing via HTTP tanpa HTTPS)
+  - `NODE_ENV` (production)
+
+### VPS (Ubuntu/Debian) + PM2
+
+1. Install dan clone
+```bash
+git clone <repo-url>
+cd Toko-Madura
+npm install
+```
+
+2. Buat `.env` di root project
+
+`.env` tidak ikut git, jadi wajib dibuat manual di VPS.
 
 ```bash
-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+# Generate secret
+openssl rand -hex 32
 ```
 
-## Setup production (Vercel)
-
-Aplikasi ini butuh database MySQL yang terjangkau dari internet. MySQL di
-localhost tidak akan bekerja untuk Vercel.
-
-### 1. Siapkan database
-
-Salah satu pilihan:
-
-| Provider | Catatan |
-|---|---|
-| **Aiven for MySQL** | Free tier, tanpa kartu kredit, MySQL 8 asli. Paling mudah. |
-| TiDB Cloud Starter | Free, MySQL-kompatibel, tapi username ber-prefix dan port 4000. |
-| VPS sendiri | Kalau sudah punya hosting. |
-
-Buat database MySQL, lalu ambil `Host`, `Port`, `User`, `Password`, dan nama
-database dari halaman provider.
-
-### 2. Isi env var di Vercel
-
-Vercel → project → **Settings → Environment Variables**, lalu set:
-
-```
-DATABASE_URL = mysql://USER:PASSWORD@HOST:PORT/NAMA_DB
-AUTH_SECRET  = <random 32+ karakter>
+```env
+DATABASE_URL="mysql://user:password@127.0.0.1:3306/toko_madura"
+AUTH_SECRET="hasil-openssl-rand-hex-32"
+COOKIE_SECURE="false"
+NODE_ENV="production"
 ```
 
-Yang perlu diperhatikan:
+`COOKIE_SECURE`:
+- `false` kalau diakses lewat `http://IP:3010`
+- `true` kalau diakses lewat `https://domain` (reverse proxy + SSL)
 
-- **Jangan bungkus nilainya dengan tanda kutip** dan jangan pakai `< >`.
-- **Percent-encode password** kalau mengandung karakter khusus:
-  `@` → `%40`, `:` → `%3A`, `/` → `%2F`, `?` → `%3F`, `#` → `%23`, `&` → `%26`.
-  Contoh: password `p@ss:word` → `p%40ss%3Aword`.
-- Centang environment **Production** (dan **Preview** agar preview deploy juga
-  ikut berfungsi).
-- Setelah mengubah env var, Vercel otomatis deploy ulang.
+3. Siapkan database
+```bash
+npx prisma generate
+npx prisma migrate deploy
+```
 
-### 3. Jalankan migrasi ke database production
+4. Cek kondisi (read-only, aman dijalankan kapan saja)
+```bash
+npm run admin:cek
+```
+
+Kalau muncul `[GAGAL] User "admin" belum ada`, buat dulu:
+```bash
+npm run db:seed
+```
+
+Atau set password sendiri tanpa seed:
+```bash
+npm run admin:reset -- --password "PasswordKuatClient123"
+```
+
+5. Build
+```bash
+npm run build
+```
+
+Build production akan gagal dengan pesan jelas kalau `AUTH_SECRET` kosong atau kurang dari 32 karakter.
+
+6. Jalankan dengan PM2
+```bash
+pm2 start npm --name toko-madura -- start -- -p 3010
+pm2 save
+pm2 startup
+```
+
+7. Verifikasi
+```bash
+curl -s http://127.0.0.1:3010/api/health
+```
+
+Semua field harus `true` / `ok: true`, termasuk `admin_ada`.
+
+## Troubleshooting: Situs Terbuka Tapi Login Gagal
+
+Halaman login cuma halaman statis, jadi **bisa dibuka meskipun database bermasalah**. Buka `/api/health` atau jalankan `npm run admin:cek` untuk tahu penyebab sebenarnya.
+
+| Gejala | Penyebab | Solusi |
+| --- | --- | --- |
+| "Username atau password salah" | User admin tidak ada, atau password beda | `npm run admin:cek -- --password "..."`, lalu `npm run admin:reset` |
+| Login sukses lalu balik ke `/login` tanpa error | Cookie `Secure` ditolak browser saat akses HTTP | Set `COOKIE_SECURE=false`, lalu `npm run build` + `pm2 restart` |
+| "Aplikasi belum siap dipakai" | Migrasi belum jalan, atau DB tidak bisa dihubungi | `npx prisma migrate deploy`, cek kredensial MariaDB |
+| "Terjadi kesalahan di server" | Error tidak terklasifikasi | `pm2 logs toko-madura --lines 50` |
+
+### Cek log login
+
+Setiap percobaan login tercatat di log server (tanpa menyimpan password):
 
 ```bash
-# pakai DATABASE_URL production, JANGAN database lokal
-$env:DATABASE_URL = "mysql://USER:PASSWORD@HOST:PORT/NAMA_DB"
-npx prisma migrate deploy   # bikin tabel dari prisma/migrations/
-npx prisma db seed          # isi admin + kategori + produk contoh
+pm2 logs toko-madura --lines 50
 ```
 
-> **Kenapa `prisma migrate deploy` tidak ditaruh di `vercel.json`?**
-> `buildCommand` sengaja dibiarkan `prisma generate && next build`. Kalau migrasi
-> ikut di dalam build, satu migrasi yang gagal akan ikut menggagalkan seluruh
-> build dan deployment. Migrasi lebih aman dijalankan manual setelah
-> `DATABASE_URL` terisi.
+Contoh baris:
 
-### 4. Verifikasi
+```
+[login] berhasil | user=admin | ip=192.168.1.20 | 143.2ms
+[login] gagal: user_tidak_ada | user=admin | ip=192.168.1.20 | 12.4ms
+[login] gagal: password_salah | user=admin | ip=192.168.1.20 | 156.1ms
+[login] gagal: DB_BELUM_DIATURKAN (P2021) | user=admin | ip=192.168.1.20 | 30.1ms
+```
+
+### Endpoint health
+
+`/api/health` mengembalikan 200 kalau siap, 503 kalau ada masalah. Detail (`error`, `masalah`) hanya ditampilkan untuk request dari `localhost`, atau set `HEALTH_DETAIL=true` kalau perlu lihat dari IP lain.
 
 ```bash
-curl https://<domain-anda>/api/health
+curl -s http://127.0.0.1:3010/api/health
 ```
-
-`ok: true` berarti `DATABASE_URL` terisi, `AUTH_SECRET` aman, dan database
-menjawab. Kalau belum, endpoint itu menjelaskan masalahnya di `masalah[]` dan
-`database_url_ada` (false = nilainya kosong, true = terisi tapi tidak bisa
-di-parse).
-
-## Endpoint diagnosis
-
-`GET /api/health` adalah satu-satunya endpoint yang melaporkan detail teknis
-konfigurasi:
 
 ```json
 {
-  "ok": false,
-  "database_url_ada": true,
+  "ok": true,
   "database_terpasang": true,
   "auth_secret_aman": true,
-  "ssl_aktif": true,
-  "db_menjawab": false,
-  "latensi_ms": 12,
-  "error": "Koneksi database gagal (P1001).",
-  "masalah": ["Koneksi database gagal (P1001)."]
+  "db_menjawab": true,
+  "tabel_user_ada": true,
+  "jumlah_user": 1,
+  "admin_ada": true
 }
 ```
 
-Return **503** kalau ada masalah, **200** kalau semuanya sehat.
+## Scripts
 
-## Kontrak error API
-
-Semua route database dibungkus `denganDb()` dari `lib/api-error.js`, jadi tidak
-pernah melempar HTTP 500 mentah. Yang dikembalikan:
-
-| `kode` | HTTP | Arti |
-|---|---|---|
-| `DB_BELUM_DIATURKAN` | 503 | `DATABASE_URL` kosong/tidak bisa di-parse. |
-| `DB_GAGAL` | 503 | Database tidak bisa dihubungi. |
-| `AUTH_BELUM_DIATURKAN` | 503 | `AUTH_SECRET` belum diset di production. |
-| `INTERNAL` | 500 | Bug yang tidak terduga (detail hanya di development). |
-
-Halaman kasir tidak pernah menampilkan teks teknis: kode di atas dipakai
-`lib/use-api.js` untuk merender komponen `components/BelumSiap.jsx`.
-
-## Catatan Keamanan
-
-- `app/login/page.jsx` masih menampilkan **akun demo** (`admin` / `admin123`) di
-  halaman login. Ini tidak aman untuk production — hapus baris tersebut sebelum
-  aplikasi dipakai sungguhan.
-- Ganti password demo, dan pakai `AUTH_SECRET` yang unik per environment.
+| Script | Fungsi |
+| --- | --- |
+| `npm run dev` | development server |
+| `npm run build` | build production (gagal kalau `AUTH_SECRET` tidak valid) |
+| `npm start` | start production server |
+| `npm run lint` | linting |
+| `npm run db:migrate` | deploy migration |
+| `npm run db:seed` | seed data (tidak menimpa password admin) |
+| `npm run db:setup` | migrate + seed |
+| `npm run admin:cek` | diagnosa environment, DB, dan akun admin |
+| `npm run admin:reset` | buat atau ganti password admin |

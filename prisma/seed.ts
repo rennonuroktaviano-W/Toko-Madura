@@ -19,7 +19,7 @@ async function main() {
   const password = await bcrypt.hash("admin123", 10);
   await prisma.user.upsert({
     where: { username: "admin" },
-    update: { nama: "Admin Warung", password },
+    update: { nama: "Admin Warung" },
     create: {
       nama: "Admin Warung",
       username: "admin",
@@ -88,7 +88,13 @@ async function main() {
     }
   }
 
-  console.log("Seed selesai: pengaturan, admin (admin/admin123), kategori & produk contoh.");
+  const adminAda = await prisma.user.count({ where: { username: "admin" } });
+  console.log("Seed selesai: pengaturan, admin, kategori & produk contoh.");
+  console.log(
+    adminAda > 0
+      ? "Password admin tidak diubah oleh seed. Kalau lupa, pakai: npm run admin:reset"
+      : "Admin dibuat dengan password default: admin123"
+  );
 }
 
 main()

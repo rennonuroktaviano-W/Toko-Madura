@@ -20,6 +20,18 @@ function timing(header) {
   return { headers: { "Server-Timing": header } };
 }
 
+function ipPencoba(request) {
+  const forwarded = request.headers.get("x-forwarded-for");
+  if (forwarded) return forwarded.split(",")[0].trim();
+  return request.headers.get("x-real-ip") ?? "tidak diketahui";
+}
+
+function catat(hasil, { username, request, total }) {
+  console.log(
+    `[login] ${hasil} | user=${username || "(kosong)"} | ip=${ipPencoba(request)} | ${total}ms`
+  );
+}
+
 export async function POST(request) {
   let body;
   try {
@@ -54,8 +66,20 @@ export async function POST(request) {
     const geserBcrypt = tandai("bcrypt");
 
     if (!user || !match) {
+      const hasil = !user ? "gagal: user_tidak_ada" : "gagal: password_salah";
+      catat(hasil, {
+        username,
+        request,
+        total: (performance.now() - mulai).toFixed(1),
+      });
       return Response.json(GAGAL, { status: 401, ...timing(`${geserDb}, ${geserBcrypt}`) });
     }
+
+    catat("berhasil", {
+      username,
+      request,
+      total: (performance.now() - mulai).toFixed(1),
+    });
 
     const token = await createSessionToken({
       id: user.id,
@@ -81,6 +105,12 @@ export async function POST(request) {
     );
   } catch (err) {
     const kode = klasifikasiError(err) ?? KODE.INTERNAL;
+    catat(`gagal: ${kode} (${err?.code ?? "tanpa-kode"})`, {
+      username,
+      request,
+      total: (performance.now() - mulai).toFixed(1),
+    });
+    console.error("[login] error:", err?.message ?? err);
     const res = respondError(kode, {
       detail: process.env.NODE_ENV === "production" ? undefined : String(err?.message ?? err),
     });
