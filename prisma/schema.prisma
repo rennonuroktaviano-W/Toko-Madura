@@ -17,6 +17,16 @@ enum StatusProduk {
   nonaktif
 }
 
+enum SumberTransaksi {
+  Kasir
+  Order
+}
+
+enum StatusTransaksi {
+  Selesai
+  MenungguPembayaran
+}
+
 model Pengaturan {
   id        Int    @id @default(autoincrement())
   namaToko  String
@@ -70,18 +80,31 @@ model Produk {
   @@index([kategoriId])
 }
 
+model FotoProduk {
+  id        String   @id @default(cuid())
+  mime      String
+  ukuran    Int
+  data      Bytes
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
 model Transaksi {
-  id          String      @id @default(cuid())
-  noTransaksi String      @unique
-  tanggal     DateTime    @default(now())
-  kasirId     Int
-  kasir       User        @relation(fields: [kasirId], references: [id])
-  subtotal    Int
-  grandTotal  Int
-  metodeBayar MetodeBayar
-  jumlahBayar Int
-  kembalian   Int
-  jumlahItem  Int
+  id           String           @id @default(cuid())
+  noTransaksi  String           @unique
+  tanggal      DateTime         @default(now())
+  kasirId      Int?
+  kasir        User?            @relation(fields: [kasirId], references: [id])
+  subtotal     Int
+  grandTotal   Int
+  metodeBayar  MetodeBayar
+  jumlahBayar  Int
+  kembalian    Int
+  jumlahItem   Int
+  sumber       SumberTransaksi @default(Kasir)
+  status       StatusTransaksi @default(Selesai)
+  pelangganId  String?
 
   items ItemTransaksi[]
 
@@ -90,6 +113,8 @@ model Transaksi {
 
   @@index([tanggal])
   @@index([kasirId])
+  @@index([pelangganId, tanggal])
+  @@index([status, tanggal])
 }
 
 model ItemTransaksi {

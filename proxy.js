@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { SESSION_COOKIE, verifySessionToken } from "./lib/auth";
+import { SESSION_COOKIE, TIPE_ADMIN, verifySessionToken } from "./lib/auth";
 
 const PROTECTED = [
   "/",
@@ -9,6 +9,7 @@ const PROTECTED = [
   "/riwayat",
   "/transaksi",
   "/dashboard",
+  "/pengaturan",
 ];
 
 function isProtected(pathname) {
@@ -21,15 +22,16 @@ export async function proxy(request) {
   const { pathname, search } = new URL(request.url);
   const token = request.cookies.get(SESSION_COOKIE)?.value;
   const session = token ? await verifySessionToken(token) : null;
+  const masuk = session?.tipe === TIPE_ADMIN ? session : null;
 
   if (pathname === "/login") {
-    if (session) {
+    if (masuk) {
       return NextResponse.redirect(new URL("/kasir", request.url));
     }
     return NextResponse.next();
   }
 
-  if (isProtected(pathname) && !session) {
+  if (isProtected(pathname) && !masuk) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("next", pathname + search);
     return NextResponse.redirect(loginUrl);
@@ -47,6 +49,7 @@ export const config = {
     "/riwayat/:path*",
     "/transaksi/:path*",
     "/dashboard/:path*",
+    "/pengaturan/:path*",
     "/login",
   ],
 };

@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/db";
 import { requireAuth, unauthorized } from "@/lib/api-auth";
 import { denganDb } from "@/lib/api-error";
-import { namaValid } from "@/lib/validasi";
+import { namaValid, fotoUrlValid } from "@/lib/validasi";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -54,8 +54,15 @@ export const POST = denganDb(async (request) => {
   const harga = Number(body?.harga);
   const stok = Number(body?.stok ?? 0);
   const satuan = String(body?.satuan ?? "pcs").trim() || "pcs";
-  const fotoUrl = body?.fotoUrl ? String(body.fotoUrl).trim() : null;
+const fotoUrl = body?.fotoUrl ? String(body.fotoUrl).trim() : null;
   const status = body?.status === "nonaktif" ? "nonaktif" : "aktif";
+
+  if (fotoUrl && !fotoUrlValid(fotoUrl)) {
+    return Response.json(
+      { error: "Foto tidak valid. Pakai foto yang diunggah atau URL https://..." },
+      { status: 400 }
+    );
+  }
 
   if (!namaValid(nama)) {
     return Response.json(

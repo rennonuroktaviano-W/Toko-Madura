@@ -8,6 +8,7 @@ import { useFlash } from "@/lib/use-flash";
 import { MAX_CATATAN } from "@/lib/validasi";
 import FilterKategori from "@/components/FilterKategori";
 import StokBadge from "@/components/StokBadge";
+import FotoProduk from "@/components/FotoProduk";
 import StrukModal from "@/components/StrukModal";
 
 function CartPanel({
@@ -465,6 +466,11 @@ export default function KasirPage() {
                 className="group flex min-w-0 flex-col rounded-2xl border-2 bg-white p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:opacity-50"
                 style={{ borderColor: p.kategori.warna + "55" }}
               >
+                {p.fotoUrl && (
+                  <div className="mb-2 h-24 w-full overflow-hidden rounded-xl border border-amber-100">
+                    <FotoProduk fotoUrl={p.fotoUrl} nama={p.nama} className="h-full w-full" />
+                  </div>
+                )}
                 <div className="flex flex-wrap items-start justify-between gap-1">
                   <span
                     className="inline-flex max-w-full items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold text-white"

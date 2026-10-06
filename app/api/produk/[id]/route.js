@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/db";
 import { requireAuth, unauthorized } from "@/lib/api-auth";
 import { denganDb } from "@/lib/api-error";
-import { namaValid } from "@/lib/validasi";
+import { namaValid, fotoUrlValid, idFotoDariUrl } from "@/lib/validasi";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -58,9 +58,25 @@ export const PUT = denganDb(async (request, ctx) => {
     }
     data.harga = Math.round(harga);
   }
-  if (satuan) data.satuan = satuan;
-  if (fotoUrl !== undefined) data.fotoUrl = fotoUrl;
+if (satuan) data.satuan = satuan;
+  if (fotoUrl !== undefined) {
+    if (fotoUrl && !fotoUrlValid(fotoUrl)) {
+      return Response.json(
+        { error: "Foto tidak valid. Pakai foto yang diunggah atau URL https://..." },
+        { status: 400 }
+      );
+    }
+    data.fotoUrl = fotoUrl;
+  }
   if (status) data.status = status;
+
+  const lama = await prisma.produk.findUnique({
+    where: { id: produkId },
+    select: { fotoUrl: true },
+  });
+  if (!lama) {
+    return Response.json({ error: "Barang tidak ditemukan" }, { status: 404 });
+  }
 
   try {
     const updated = await prisma.produk.update({
@@ -68,6 +84,12 @@ export const PUT = denganDb(async (request, ctx) => {
       data,
       include: { kategori: true },
     });
+    if (fotoUrl !== undefined && lama.fotoUrl !== fotoUrl) {
+      const idLama = idFotoDariUrl(lama.fotoUrl);
+      if (idLama) {
+        await prisma.fotoProduk.deleteMany({ where: { id: idLama } });
+      }
+    }
     return Response.json(updated);
   } catch (e) {
     if (e?.code === "P2025") {
@@ -90,8 +112,16 @@ export const DELETE = denganDb(async (request, ctx) => {
     return Response.json({ error: "ID tidak valid" }, { status: 400 });
   }
 
-  try {
+try {
+    const produk = await prisma.produk.findUnique({
+      where: { id: produkId },
+      select: { fotoUrl: true },
+    });
     await prisma.produk.delete({ where: { id: produkId } });
+    const idFoto = idFotoDariUrl(produk?.fotoUrl);
+    if (idFoto) {
+      await prisma.fotoProduk.deleteMany({ where: { id: idFoto } });
+    }
     return Response.json({ ok: true });
   } catch (e) {
     if (e?.code === "P2003") {

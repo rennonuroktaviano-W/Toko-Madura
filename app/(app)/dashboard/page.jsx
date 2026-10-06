@@ -40,6 +40,15 @@ export default function DashboardPage() {
     { label: "Transaksi Hari Ini", value: jmlTrxHariIni, warna: "from-green-400 to-warung-hijau" },
     { label: "Item Terjual Hari Ini", value: jmlItemHariIni, warna: "from-blue-400 to-blue-600" },
     { label: "Produk Aktif", value: produkAktif, warna: "from-purple-400 to-purple-600" },
+    ...((data?.pesananMenunggu ?? 0) > 0
+      ? [
+          {
+            label: "Pesanan Menunggu Pembayaran",
+            value: data.pesananMenunggu,
+            warna: "from-red-400 to-red-600",
+          },
+        ]
+      : []),
   ];
   const MAX_BAR = 130;
 

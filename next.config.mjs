@@ -17,6 +17,10 @@ if (process.env.NODE_ENV === "production") {
 
 const nextConfig = {
   poweredByHeader: false,
+  images: {
+    unoptimized: true,
+    remotePatterns: [{ protocol: "https", hostname: "**" }],
+  },
 };
 
 export default nextConfig;

@@ -6,6 +6,7 @@ import { useApi } from "@/lib/use-api";
 import { useFlash } from "@/lib/use-flash";
 import { MAX_NAMA } from "@/lib/validasi";
 import StokBadge from "@/components/StokBadge";
+import FotoProduk from "@/components/FotoProduk";
 import BelumSiap from "@/components/BelumSiap";
 
 const SATUAN = ["pcs", "bungkus", "botol", "kaleng", "kg", "liter", "karung", "pack", "lembar"];
@@ -37,6 +38,8 @@ export default function BarangPage() {
   const [editId, setEditId] = useState(null);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [fotoBusy, setFotoBusy] = useState(false);
+  const fileRef = useRef(null);
 
   const [restockId, setRestockId] = useState(null);
   const [restockJumlah, setRestockJumlah] = useState(5);
@@ -104,6 +107,28 @@ export default function BarangPage() {
       status: p.status,
     });
     setOpenForm(true);
+  }
+
+  async function handleUploadFoto(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setFotoBusy(true);
+    try {
+      const data = new FormData();
+      data.append("foto", file);
+      const res = await fetch("/api/produk/foto", { method: "POST", body: data });
+      const hasil = await res.json().catch(() => null);
+      if (!res.ok) {
+        throw new Error(hasil?.error || "Gagal mengunggah foto.");
+      }
+      setForm((f) => ({ ...f, fotoUrl: hasil.url }));
+      flash("Foto terunggah. Klik Simpan untuk menyimpan ke barang ini.");
+    } catch (err) {
+      flash(err.message, "error");
+    } finally {
+      setFotoBusy(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
   }
 
   async function handleSubmit(e) {
@@ -247,8 +272,11 @@ export default function BarangPage() {
                 p.status === "nonaktif" ? "opacity-60" : ""
               }`}
             >
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
+              <div className="flex items-start gap-3">
+                <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-amber-100">
+                  <FotoProduk fotoUrl={p.fotoUrl} nama={p.nama} className="h-full w-full" />
+                </div>
+                <div className="min-w-0 flex-1">
                   <h3 className="truncate font-display text-lg font-extrabold text-warung-coklat">
                     {p.nama}
                   </h3>
@@ -403,17 +431,58 @@ export default function BarangPage() {
                 </div>
               </div>
 
-              <div>
+<div>
                 <label className="mb-1 block text-sm font-bold text-warung-coklat">
-                  Foto URL (opsional)
+                  Foto Produk (opsional)
                 </label>
-                <input
-                  type="url"
-                  value={form.fotoUrl}
-                  onChange={(e) => setForm({ ...form, fotoUrl: e.target.value })}
-                  placeholder="https://..."
-                  className="w-full rounded-xl border-2 border-amber-200 bg-warung-krem px-4 py-3 outline-none focus:border-warung-oranye"
-                />
+
+                <div className="flex items-start gap-3">
+                  <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-xl border-2 border-amber-200 bg-amber-50 text-3xl">
+                    {form.fotoUrl ? (
+                      <img
+                        src={form.fotoUrl}
+                        alt="Pratinjau foto"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      "🛒"
+                    )}
+                  </div>
+
+                  <div className="flex-1 space-y-2">
+                    <input
+                      ref={fileRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={handleUploadFoto}
+                      disabled={fotoBusy}
+                      className="block w-full text-xs text-warung-coklat file:mr-3 file:rounded-lg file:border-0 file:bg-warung-kuning file:px-3 file:py-2 file:text-xs file:font-extrabold file:text-warung-coklat hover:file:bg-amber-400"
+                    />
+                    <p className="text-xs text-warung-coklat/60">
+                      {fotoBusy
+                        ? "Mengunggah foto..."
+                        : "JPG/PNG/WebP, maksimal 2 MB. Klik Simpan dulu setelah upload."}
+                    </p>
+
+                    <input
+                      type="url"
+                      value={form.fotoUrl.startsWith("http") ? form.fotoUrl : ""}
+                      onChange={(e) => setForm({ ...form, fotoUrl: e.target.value })}
+                      placeholder="...atau tempel URL https://..."
+                      className="w-full rounded-xl border-2 border-amber-200 bg-warung-krem px-3 py-2 text-sm outline-none focus:border-warung-oranje"
+                    />
+
+                    {form.fotoUrl && (
+                      <button
+                        type="button"
+                        onClick={() => setForm({ ...form, fotoUrl: "" })}
+                        className="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-bold text-warung-merah hover:bg-red-100"
+                      >
+                        Hapus Foto (setelah Simpan)
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
 
               <div className="flex gap-3 pt-2">

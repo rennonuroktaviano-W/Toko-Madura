@@ -1,6 +1,16 @@
 # Toko Madura App
 
-Aplikasi kasir sederhana untuk Toko Madura dengan fitur manajemen produk, kategori, transaksi, dan riwayat penjualan.
+Aplikasi kasir sederhana untuk Toko Madura dengan fitur manajemen produk, kategori, transaksi, riwayat penjualan, konfigurasi toko (nama, lokasi, foto produk, QR), dan pesanan online mandiri lewat QR.
+
+## Fitur
+
+- **Kasir (POS)**: keranjang, QRIS/tunai, stok terpotong otomatis, cetak struk.
+- **Produk & Kategori**: CRUD lengkap, restock, nonaktif, **unggah foto produk** (tersimpan sebagai blob di database, disajikan lewat `/api/foto/[id]`).
+- **Pengaturan Toko** (`/pengaturan`): nama toko, alamat + link Google Maps, tagline, dan **QR pesanan online** yang bisa dicetak/diunduh.
+- **Pesanan Online** (`/pesan`): pelanggan scan QR, pesan tanpa login, **bayar QRIS saja** (tunai ditolak di endpoint publik), status awal `MenungguPembayaran`.
+- **Riwayat**: omzet hanya dihitung dari transaksi `Selesai`; transaksi online menunggu bayar tampil sebagai badge terpisah.
+- **Keamanan**: cookie admin vs cookie pelanggan terpisah, route proteksi di `proxy.js`, endpoint publik punya rate limit + cek `sec-fetch-site`.
+
 
 ## Teknologi
 
@@ -38,8 +48,12 @@ cp .env.example .env
 ```env
 DATABASE_URL="mysql://user:password@localhost:3306/toko_madura"
 AUTH_SECRET="ganti-dengan-random-string-minimal-32-karakter"
-COOKIE_SECURE="false" # set true hanya jika akses via HTTPS
+COOKIE_SECURE="false" # set true jika akses via HTTPS
 NODE_ENV="development"
+# opsional: base URL publik untuk QR pesanan online
+PUBLIC_APP_URL="http://localhost:3000"
+# true jika hosting DB paksa TLS
+DATABASE_SSL="false"
 ```
 
 5. Generate Prisma Client
@@ -80,6 +94,18 @@ npm run admin:reset -- --password "PasswordKuatClient123"
 
 > `npm run db:seed` **tidak** lagi mengubah password admin yang sudah ada. Seed hanya membuat akun admin kalau belum ada, jadi aman dijalankan ulang di production.
 
+## Checklist Sebelum Production
+
+- [ ] `npm run lint` dan `npm run build` tanpa error.
+- [ ] `npx prisma migrate deploy` (migrasi tersimpan di folder `prisma/migrations`).
+- [ ] `npm run admin:cek` → semua `ok: true`, lalu ganti password admin (`npm run admin:reset -- --password "..."`).
+- [ ] `AUTH_SECRET` minimal 32 karakter; `COOKIE_SECURE=true` kalau sudah HTTPS.
+- [ ] `PUBLIC_APP_URL` diisi (domain final) supaya QR pesanan online menunjuk URL yang benar.
+- [ ] `npm run dev` → cek `/pengaturan` (simpan nama toko + QR) dan `/pesan` (order + riwayat).
+- [ ] Cek `/api/health` setelah deploy.
+
+> Foto produk disimpan sebagai blob di database (bukan di filesystem), jadi aman untuk Vercel serverless. Batas foto 2 MB per file.
+
 ## Deployment
 
 ### Vercel
@@ -89,6 +115,8 @@ npm run admin:reset -- --password "PasswordKuatClient123"
   - `DATABASE_URL` (MySQL/MariaDB)
   - `AUTH_SECRET` (minimal 32 karakter, random)
   - `COOKIE_SECURE` (opsional, default `true` di production. Set `false` jika testing via HTTP tanpa HTTPS)
+  - `PUBLIC_APP_URL` (opsional, base URL site, contoh `https://toko.example.com` — dipakai untuk QR pesanan online)
+  - `DATABASE_SSL` (opsional, `true` kalau managed MySQL memaksa TLS)
   - `NODE_ENV` (production)
 
 ### VPS (Ubuntu/Debian) + PM2
@@ -114,6 +142,9 @@ DATABASE_URL="mysql://user:password@127.0.0.1:3306/toko_madura"
 AUTH_SECRET="hasil-openssl-rand-hex-32"
 COOKIE_SECURE="false"
 NODE_ENV="production"
+# isi kalau pakai domain/HTTPS, QR pesanan online memakai URL ini
+PUBLIC_APP_URL="https://domain-anda"
+DATABASE_SSL="false"
 ```
 
 `COOKIE_SECURE`:

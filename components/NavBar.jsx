@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 const links = [
   { href: "/kasir", label: "Kasir" },
@@ -9,11 +10,32 @@ const links = [
   { href: "/kategori", label: "Kategori" },
   { href: "/riwayat", label: "Riwayat" },
   { href: "/dashboard", label: "Dashboard" },
+  { href: "/pengaturan", label: "Pengaturan" },
 ];
+
+const DEFAULT = { namaToko: "Warung Madura", tagline: "Kasir 24 Jam" };
 
 export default function NavBar() {
   const pathname = usePathname();
   const router = useRouter();
+  const [toko, setToko] = useState(DEFAULT);
+
+  useEffect(() => {
+    let batal = false;
+    fetch("/api/pengaturan", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (batal || !data) return;
+        setToko({
+          namaToko: data.namaToko || DEFAULT.namaToko,
+          tagline: data.tagline || DEFAULT.tagline,
+        });
+      })
+      .catch(() => {});
+    return () => {
+      batal = true;
+    };
+  }, [pathname]);
 
   function isActive(href) {
     return pathname === href || pathname.startsWith(href + "/");
@@ -29,9 +51,9 @@ export default function NavBar() {
       <aside className="hidden lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-64 lg:shrink-0 lg:flex-col lg:overflow-y-auto bg-warung-hijau text-white">
         <div className="border-b border-white/10 px-6 py-5">
           <p className="font-display text-xl font-extrabold leading-tight">
-            Warung Madura
+            {toko.namaToko}
           </p>
-          <p className="text-xs text-amber-200/80">Kasir 24 Jam</p>
+          <p className="text-xs text-amber-200/80">{toko.tagline}</p>
         </div>
         <nav className="flex-1 space-y-1 px-3 py-4">
           {links.map((l) => (
@@ -60,9 +82,9 @@ export default function NavBar() {
 
       <header className="sticky top-0 z-30 bg-warung-hijau text-white shadow-lg lg:hidden">
         <div className="flex items-center gap-3 px-4 py-3">
-          <p className="font-display text-lg font-extrabold">Warung Madura</p>
+          <p className="font-display text-lg font-extrabold">{toko.namaToko}</p>
           <span className="ml-auto font-bold text-amber-200 text-xs">
-            Kasir 24 Jam
+            {toko.tagline}
           </span>
         </div>
         <nav className="flex gap-1 overflow-x-auto px-2 pb-2">

@@ -15,6 +15,7 @@ export const GET = denganDb(async () => {
   const startHariIni = awalHariWIB();
   const endHariIni = tambahHari(startHariIni, 1);
   const mulai7Hari = tambahHari(startHariIni, -6);
+  const sudahBayar = { status: "Selesai" };
 
   const [
     omzetHariIni,
@@ -26,21 +27,25 @@ export const GET = denganDb(async () => {
     barangTerlaris,
     stokMenipis,
     transaksi7Hari,
+    pesananMenunggu,
   ] =
     await Promise.all([
       prisma.transaksi.aggregate({
         _sum: { grandTotal: true },
-        where: { tanggal: { gte: startHariIni, lt: endHariIni } },
+        where: { ...sudahBayar, tanggal: { gte: startHariIni, lt: endHariIni } },
       }),
       prisma.transaksi.count({
-        where: { tanggal: { gte: startHariIni, lt: endHariIni } },
+        where: { ...sudahBayar, tanggal: { gte: startHariIni, lt: endHariIni } },
       }),
       prisma.transaksi.aggregate({
         _sum: { jumlahItem: true },
-        where: { tanggal: { gte: startHariIni, lt: endHariIni } },
+        where: { ...sudahBayar, tanggal: { gte: startHariIni, lt: endHariIni } },
       }),
-      prisma.transaksi.aggregate({ _sum: { grandTotal: true } }),
-      prisma.transaksi.count(),
+      prisma.transaksi.aggregate({
+        _sum: { grandTotal: true },
+        where: sudahBayar,
+      }),
+      prisma.transaksi.count({ where: sudahBayar }),
       prisma.produk.count({ where: { status: "aktif" } }),
       prisma.itemTransaksi.groupBy({
         by: ["nama"],
@@ -55,9 +60,10 @@ export const GET = denganDb(async () => {
         take: 8,
       }),
       prisma.transaksi.findMany({
-        where: { tanggal: { gte: mulai7Hari, lt: endHariIni } },
+        where: { ...sudahBayar, tanggal: { gte: mulai7Hari, lt: endHariIni } },
         select: { tanggal: true, grandTotal: true },
       }),
+      prisma.transaksi.count({ where: { status: "MenungguPembayaran" } }),
     ]);
 
   const omzetPerHari = new Map();
@@ -86,6 +92,7 @@ export const GET = denganDb(async () => {
     jmlItemHariIni: jmlItemHariIni._sum.jumlahItem ?? 0,
     omzetTotal: omzetTotal._sum.grandTotal ?? 0,
     jmlTrxTotal,
+    pesananMenunggu,
     produkAktif,
     barangTerlaris: barangTerlaris.map((b) => ({
       nama: b.nama,
