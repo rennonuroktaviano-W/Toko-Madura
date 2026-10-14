@@ -4,9 +4,16 @@ import { useRef, useState } from "react";
 import { toPng } from "html-to-image";
 import Struk from "./Struk";
 
-export default function StrukModal({ transaksi, pengaturan, onClose, buttonClose = "Transaksi Baru", title = "Struk Transaksi" }) {
+const PAPER_WIDTHS = { 58: "50mm", 80: "72mm" };
+
+export default function StrukModal({ transaksi, pengaturan, onClose, buttonClose = "Transaksi Baru", title = "Struk Transaksi") {
   const ref = useRef(null);
   const [busy, setBusy] = useState(null);
+  const [paperWidth, setPaperWidth] = useState("80");
+
+  function getPrintWidth() {
+    return PAPER_WIDTHS[paperWidth] || PAPER_WIDTHS[80];
+  }
 
   async function generatePng() {
     return toPng(ref.current, {
@@ -37,6 +44,7 @@ export default function StrukModal({ transaksi, pengaturan, onClose, buttonClose
     let iframe;
     try {
       const dataUrl = await generatePng();
+      const pw = getPrintWidth();
       iframe = document.createElement("iframe");
       Object.assign(iframe.style, {
         position: "fixed",
@@ -51,9 +59,9 @@ export default function StrukModal({ transaksi, pengaturan, onClose, buttonClose
       win.document.write(
         `<!doctype html><html><head><style>` +
           `*{margin:0;padding:0;box-sizing:border-box}` +
-          `body{display:flex;justify-content:center;padding:16px 0}` +
-          `img{width:300px;height:auto}` +
-          `@page{margin:0;size:auto}` +
+          `body{display:flex;justify-content:center;padding:8px 0;margin:0}` +
+          `img{width:${pw};height:auto;max-width:100%}` +
+          `@page{margin:0}` +
           `</style></head><body><img src="${dataUrl}" alt="Struk" /></body></html>`
       );
       win.document.close();
