@@ -91,6 +91,7 @@ model FotoProduk {
 }
 
 model Transaksi {
+  requestId String? @unique
   id           String           @id @default(cuid())
   noTransaksi  String           @unique
   tanggal      DateTime         @default(now())

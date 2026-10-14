@@ -47,7 +47,8 @@ export default function PesanPage({ toko }) {
   const [cart, setCart] = useState([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [sending, setSending] = useState(false);
-  const [cartError, setCartError] = useState("");
+  const requestIdRef = useRef("");
+  const currentRequestId = requestIdRef.current;
   const [flash, setFlash] = useState("");
   const [sukses, setSukses] = useState(null);
   const [riwayat, setRiwayat] = useState([]);
@@ -167,6 +168,10 @@ export default function PesanPage({ toko }) {
       return;
     }
     setSending(true);
+    if (!currentRequestId) {
+      requestIdRef.current = crypto.randomUUID();
+    }
+    const idToSend = currentRequestId || requestIdRef.current;
     try {
       const data = await send("/api/pelanggan/pesanan", {
         method: "POST",
@@ -174,6 +179,7 @@ export default function PesanPage({ toko }) {
         body: JSON.stringify({
           items: cart.map((c) => ({ produkId: c.produkId, qty: c.qty })),
           metodeBayar: "QRIS",
+          requestId: idToSend,
         }),
       });
       setSukses(data.transaksi);

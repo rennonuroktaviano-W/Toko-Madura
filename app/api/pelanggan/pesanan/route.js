@@ -1,4 +1,3 @@
-import { prisma } from "@/lib/db";
 import { denganDb } from "@/lib/api-error";
 import { pelangganSekarang } from "@/lib/pelanggan";
 import {
@@ -72,6 +71,7 @@ export const POST = denganDb(async (request) => {
   }
 
   try {
+    const requestId = body?.requestId || crypto.randomUUID();
     const transaksi = await buatTransaksi({
       items: bacaItems(body),
       metodeBayar: "QRIS",
@@ -81,6 +81,7 @@ export const POST = denganDb(async (request) => {
       status: "MenungguPembayaran",
       awalanNo: "ORD",
       catatPembayaran: false,
+      requestId,
     });
 
     return Response.json({ transaksi }, { status: 201 });

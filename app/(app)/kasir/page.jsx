@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { rupiah } from "@/lib/format";
 import { useApi } from "@/lib/use-api";
 import { useFlash } from "@/lib/use-flash";
@@ -38,6 +38,7 @@ function CartPanel({
         <h2 className="font-display text-lg font-extrabold text-warung-coklat">
           Keranjang
         </h2>
+
         {cart.length > 0 && (
           <button
             onClick={hapusSemua}
@@ -56,9 +57,15 @@ function CartPanel({
         ) : (
           <div className="mt-3 space-y-3">
             {cart.map((c) => (
-              <div key={c.produkId} className="rounded-xl border border-amber-100 p-3">
+              <div
+                key={c.produkId}
+                className="rounded-xl border border-amber-100 p-3"
+              >
                 <div className="flex items-start justify-between gap-2">
-                  <p className="min-w-0 font-bold text-warung-coklat">{c.nama}</p>
+                  <p className="min-w-0 font-bold text-warung-coklat">
+                    {c.nama}
+                  </p>
+
                   <button
                     onClick={() => removeItem(c.produkId)}
                     className="shrink-0 text-warung-merah"
@@ -67,6 +74,7 @@ function CartPanel({
                     ✕
                   </button>
                 </div>
+
                 <div className="mt-2 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-1">
                     <button
@@ -75,9 +83,11 @@ function CartPanel({
                     >
                       −
                     </button>
+
                     <span className="w-8 text-center font-extrabold text-warung-coklat">
                       {c.qty}
                     </span>
+
                     <button
                       onClick={() => inc(c.produkId)}
                       className="flex h-8 w-8 items-center justify-center rounded-lg bg-warung-kuning font-extrabold text-warung-coklat transition hover:bg-amber-400"
@@ -85,25 +95,37 @@ function CartPanel({
                       +
                     </button>
                   </div>
-                  <p className="font-bold text-warung-oranye">{rupiah(c.subtotal)}</p>
+
+                  <p className="font-bold text-warung-oranye">
+                    {rupiah(c.subtotal)}
+                  </p>
                 </div>
+
                 <div className="mt-1 flex items-center justify-between gap-2">
                   <p className="text-xs text-warung-coklat/50">
                     {c.qty} x {rupiah(c.harga)} / {c.satuan}
                   </p>
+
                   <button
                     onClick={() => toggleCatatan(c.produkId)}
                     className="text-xs font-bold text-warung-hijau hover:underline"
                   >
-                    {c.showCatatan ? "Tutup" : c.catatan ? "Ubah Catatan" : "Catatan"}
+                    {c.showCatatan
+                      ? "Tutup"
+                      : c.catatan
+                        ? "Ubah Catatan"
+                        : "Catatan"}
                   </button>
                 </div>
+
                 {c.showCatatan && (
                   <input
                     type="text"
                     value={c.catatan}
                     maxLength={MAX_CATATAN}
-                    onChange={(e) => setCatatan(c.produkId, e.target.value)}
+                    onChange={(e) =>
+                      setCatatan(c.produkId, e.target.value)
+                    }
                     placeholder="Catatan (mis. No Gula)"
                     className="mt-2 w-full rounded-lg border-2 border-amber-200 bg-warung-krem px-3 py-2 text-sm outline-none focus:border-warung-oranje"
                   />
@@ -120,6 +142,7 @@ function CartPanel({
                 <span>Jumlah item</span>
                 <span>{jumlahItem} item</span>
               </p>
+
               <p className="mt-1 flex justify-between text-lg font-extrabold text-warung-coklat">
                 <span>Total</span>
                 <span className="text-warung-oranye">{rupiah(total)}</span>
@@ -130,6 +153,7 @@ function CartPanel({
               <p className="mb-1 text-sm font-bold text-warung-coklat">
                 Metode Bayar
               </p>
+
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={() => {
@@ -144,6 +168,7 @@ function CartPanel({
                 >
                   Tunai
                 </button>
+
                 <button
                   onClick={() => {
                     setMetode("QRIS");
@@ -166,6 +191,7 @@ function CartPanel({
                 <label className="mb-1 block text-sm font-bold text-warung-coklat">
                   Nominal Bayar
                 </label>
+
                 <input
                   type="number"
                   inputMode="numeric"
@@ -175,6 +201,7 @@ function CartPanel({
                   placeholder="Masukkan nominal"
                   className="w-full rounded-xl border-2 border-amber-200 bg-warung-krem px-4 py-3 text-lg font-extrabold outline-none focus:border-warung-oranye"
                 />
+
                 {Number(bayar) > 0 && (
                   <p className="mt-2 flex justify-between text-sm font-bold text-warung-hijau">
                     <span>Kembalian</span>
@@ -201,9 +228,10 @@ function CartPanel({
                     className="h-auto w-full object-contain"
                   />
                 </button>
+
                 <p className="mt-2 text-[11px] font-semibold leading-snug text-blue-800">
-                  Minta pelanggan scan QR ini, lalu masukkan nominal {rupiah(total)}.
-                  Ketuk QR untuk memperbesar.
+                  Minta pelanggan scan QR ini, lalu masukkan nominal{" "}
+                  {rupiah(total)}. Ketuk QR untuk memperbesar.
                 </p>
               </div>
             )}
@@ -246,6 +274,7 @@ function QrisZoom({ onTutup }) {
         unoptimized
         className="max-h-[68vh] w-auto max-w-full rounded-2xl bg-white p-3"
       />
+
       <p className="max-w-sm text-center text-sm font-bold text-white">
         Minta pelanggan scan QR ini. Ketuk layar untuk menutup.
       </p>
@@ -255,6 +284,7 @@ function QrisZoom({ onTutup }) {
 
 export default function KasirPage() {
   const api = useApi();
+
   const [produks, setProduks] = useState([]);
   const [kategoris, setKategoris] = useState([]);
   const [pengaturan, setPengaturan] = useState(null);
@@ -265,6 +295,7 @@ export default function KasirPage() {
   const [bayar, setBayar] = useState("");
   const [error, setError] = useState("");
   const [processing, setProcessing] = useState(false);
+  const requestIdRef = useRef("");
   const [struk, setStruk] = useState(null);
   const [cartOpen, setCartOpen] = useState(false);
   const [qrisZoom, setQrisZoom] = useState(false);
@@ -282,39 +313,65 @@ export default function KasirPage() {
 
   const filtered = useMemo(() => {
     let list = produks;
+
     if (kategoriAktif !== "semua") {
-      list = list.filter((p) => String(p.kategoriId) === String(kategoriAktif));
+      list = list.filter(
+        (p) => String(p.kategoriId) === String(kategoriAktif),
+      );
     }
+
     if (q.trim()) {
       const t = q.toLowerCase();
       list = list.filter((p) => p.nama.toLowerCase().includes(t));
     }
+
     return list;
   }, [produks, kategoriAktif, q]);
 
-  const cartDetail = cart.map((c) => ({ ...c, subtotal: c.harga * c.qty }));
+  const cartDetail = cart.map((c) => ({
+    ...c,
+    subtotal: c.harga * c.qty,
+  }));
+
   const total = cartDetail.reduce((s, i) => s + i.subtotal, 0);
   const jumlahItem = cart.reduce((s, i) => s + i.qty, 0);
   const nominalBayar = Number(bayar);
-  const kembalian = metode === "Tunai" && nominalBayar > 0 ? nominalBayar - total : 0;
-  const uangKurang = metode === "Tunai" && nominalBayar > 0 && nominalBayar < total;
+
+  const kembalian =
+    metode === "Tunai" && nominalBayar > 0
+      ? nominalBayar - total
+      : 0;
+
+  const uangKurang =
+    metode === "Tunai" &&
+    nominalBayar > 0 &&
+    nominalBayar < total;
 
   function addToCart(p) {
     const found = cart.find((c) => c.produkId === p.id);
+
     if (found) {
       if (found.qty >= p.stok) {
         flashMsg(`Stok ${p.nama} hanya tersisa ${p.stok}`);
         return;
       }
+
       setCart((prev) =>
-        prev.map((c) => (c.produkId === p.id ? { ...c, qty: c.qty + 1 } : c))
+        prev.map((c) =>
+          c.produkId === p.id
+            ? { ...c, qty: c.qty + 1 }
+            : c,
+        ),
       );
+
       return;
     }
+
     if (p.stok <= 0) {
       flashMsg(`${p.nama} sudah habis`);
       return;
     }
+
     setCart((prev) => [
       ...prev,
       {
@@ -332,27 +389,35 @@ export default function KasirPage() {
 
   function inc(produkId) {
     const item = cart.find((c) => c.produkId === produkId);
+
     if (item && item.qty >= item.stok) {
       flashMsg(`Stok ${item.nama} hanya tersisa ${item.stok}`);
       return;
     }
+
     setCart((prev) =>
       prev.map((c) =>
-        c.produkId === produkId ? { ...c, qty: c.qty + 1 } : c
-      )
+        c.produkId === produkId
+          ? { ...c, qty: c.qty + 1 }
+          : c,
+      ),
     );
   }
 
   function dec(produkId) {
     setCart((prev) =>
       prev.map((c) =>
-        c.produkId === produkId && c.qty > 1 ? { ...c, qty: c.qty - 1 } : c
-      )
+        c.produkId === produkId && c.qty > 1
+          ? { ...c, qty: c.qty - 1 }
+          : c,
+      ),
     );
   }
 
   function removeItem(produkId) {
-    setCart((prev) => prev.filter((c) => c.produkId !== produkId));
+    setCart((prev) =>
+      prev.filter((c) => c.produkId !== produkId),
+    );
   }
 
   function hapusSemua() {
@@ -362,36 +427,59 @@ export default function KasirPage() {
   function toggleCatatan(produkId) {
     setCart((prev) =>
       prev.map((c) =>
-        c.produkId === produkId ? { ...c, showCatatan: !c.showCatatan } : c
-      )
+        c.produkId === produkId
+          ? {
+              ...c,
+              showCatatan: !c.showCatatan,
+            }
+          : c,
+      ),
     );
   }
 
   function setCatatan(produkId, val) {
     setCart((prev) =>
       prev.map((c) =>
-        c.produkId === produkId ? { ...c, catatan: val } : c
-      )
+        c.produkId === produkId
+          ? {
+              ...c,
+              catatan: val,
+            }
+          : c,
+      ),
     );
   }
 
   async function selesaikan() {
     setError("");
+
     if (cart.length === 0) {
       setError("Keranjang masih kosong.");
       return;
     }
+
     if (metode === "Tunai") {
       if (!bayar) {
         setError("Masukkan nominal bayar.");
         return;
       }
+
       if (uangKurang) {
-        setError(`Uang kurang ${rupiah(total - nominalBayar)}.`);
+        setError(
+          `Uang kurang ${rupiah(total - nominalBayar)}.`,
+        );
         return;
       }
     }
+
+    if (!requestIdRef.current) {
+      requestIdRef.current = crypto.randomUUID();
+    }
+
+    const currentRequestId = requestIdRef.current;
+
     setProcessing(true);
+
     try {
       const data = await api.post("/api/transaksi", {
         items: cart.map((c) => ({
@@ -400,16 +488,29 @@ export default function KasirPage() {
           catatan: c.catatan || undefined,
         })),
         metodeBayar: metode,
-        jumlahBayar: metode === "Tunai" ? nominalBayar : total,
+        jumlahBayar:
+          metode === "Tunai" ? nominalBayar : total,
+        requestId: currentRequestId,
       });
+
       setStruk(data.transaksi);
+
+      // Transaksi sudah benar-benar berhasil.
+      // Checkout berikutnya harus mendapatkan requestId baru.
+      requestIdRef.current = "";
+
       setCart([]);
       setBayar("");
       setMetode("Tunai");
       setCartOpen(false);
+
       loadProduk().catch(() => {});
     } catch (e) {
-      setError(e.message || "Terjadi kesalahan, coba lagi.");
+      // Jangan reset requestId di sini.
+      // Retry transaksi yang sama harus menggunakan requestId yang sama.
+      setError(
+        e?.message || "Terjadi kesalahan, coba lagi.",
+      );
     } finally {
       setProcessing(false);
     }
@@ -421,6 +522,7 @@ export default function KasirPage() {
         <h1 className="font-display text-2xl font-extrabold text-warung-coklat lg:text-3xl">
           Halaman Kasir
         </h1>
+
         {flash && (
           <span className="max-w-full truncate rounded-full bg-warung-kuning px-4 py-2 text-sm font-extrabold text-warung-coklat shadow">
             {flash.text}
@@ -464,25 +566,43 @@ export default function KasirPage() {
                 onClick={() => addToCart(p)}
                 disabled={p.stok <= 0}
                 className="group flex min-w-0 flex-col rounded-2xl border-2 bg-white p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md disabled:opacity-50"
-                style={{ borderColor: p.kategori.warna + "55" }}
+                style={{
+                  borderColor: p.kategori.warna + "55",
+                }}
               >
                 {p.fotoUrl && (
                   <div className="mb-2 h-24 w-full overflow-hidden rounded-xl border border-amber-100">
-                    <FotoProduk fotoUrl={p.fotoUrl} nama={p.nama} className="h-full w-full" />
+                    <FotoProduk
+                      fotoUrl={p.fotoUrl}
+                      nama={p.nama}
+                      className="h-full w-full"
+                    />
                   </div>
                 )}
+
                 <div className="flex flex-wrap items-start justify-between gap-1">
                   <span
                     className="inline-flex max-w-full items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold text-white"
-                    style={{ backgroundColor: p.kategori.warna }}
+                    style={{
+                      backgroundColor: p.kategori.warna,
+                    }}
                   >
-                    <span className="truncate">{p.kategori.nama}</span>
+                    <span className="truncate">
+                      {p.kategori.nama}
+                    </span>
                   </span>
-                  <StokBadge stok={p.stok} satuan={p.satuan} ukuran="xs" />
+
+                  <StokBadge
+                    stok={p.stok}
+                    satuan={p.satuan}
+                    ukuran="xs"
+                  />
                 </div>
+
                 <p className="mt-2 flex-1 break-words text-sm font-extrabold leading-tight text-warung-coklat">
                   {p.nama}
                 </p>
+
                 <p className="mt-auto flex-wrap break-words font-extrabold text-warung-oranye">
                   {rupiah(p.harga)}
                   <span className="text-[11px] font-bold text-warung-coklat/50">
@@ -491,6 +611,7 @@ export default function KasirPage() {
                 </p>
               </button>
             ))}
+
             {filtered.length === 0 && (
               <p className="col-span-full py-10 text-center text-warung-coklat/60">
                 Tidak ada produk ditemukan.
@@ -537,6 +658,7 @@ export default function KasirPage() {
         <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/50 lg:hidden">
           <div className="flex max-h-[90dvh] w-full flex-col overflow-y-auto rounded-t-3xl bg-warung-krem p-4">
             <div className="mx-auto mb-3 h-1.5 w-12 shrink-0 rounded-full bg-amber-300" />
+
             <CartPanel
               cart={cartDetail}
               total={total}
@@ -558,6 +680,7 @@ export default function KasirPage() {
               error={error}
               setError={setError}
             />
+
             <button
               onClick={() => setCartOpen(false)}
               className="mt-3 w-full shrink-0 rounded-xl bg-warung-krem px-4 py-3 font-bold text-warung-coklat"
@@ -568,7 +691,9 @@ export default function KasirPage() {
         </div>
       )}
 
-      {qrisZoom && <QrisZoom onTutup={() => setQrisZoom(false)} />}
+      {qrisZoom && (
+        <QrisZoom onTutup={() => setQrisZoom(false)} />
+      )}
 
       {struk && (
         <StrukModal
