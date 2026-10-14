@@ -6,15 +6,14 @@ import Struk from "./Struk";
 
 const PAPER_WIDTHS = { 58: "50mm", 80: "72mm" };
 
-export default function StrukModal({ transaksi, pengaturan, onClose, buttonClose = "Transaksi Baru", title = "Struk Transaksi") {
-  const ref = useRef(null);
-  const [busy, setBusy] = useState(null);
-  const [paperWidth, setPaperWidth] = useState("80");
-
-  function getPrintWidth() {
-    return PAPER_WIDTHS[paperWidth] || PAPER_WIDTHS[80];
-  }
-
+export default function StrukModal
+({
+  transaksi,
+  pengaturan,
+  onClose,
+  buttonClose = "Transaksi Baru",
+  title = "Struk Transaksi",
+}) {
   async function generatePng() {
     return toPng(ref.current, {
       pixelRatio: 2,
