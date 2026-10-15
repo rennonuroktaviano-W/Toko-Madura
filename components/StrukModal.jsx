@@ -14,9 +14,17 @@ import {
   strukKeBytes,
   unduhPng,
 } from "@/lib/print";
+import { cetakCleanter } from "@/lib/cleanter";
+import { susunStrukBlok } from "@/lib/struk-blok";
+
+// RawBT disembunyikan sementara (diuji dulu pakai Cleanter). Set true untuk munculkan lagi.
+const TAMPILKAN_RAWBT = false;
 
 const RAWBT_PLAY_STORE =
   "https://play.google.com/store/apps/details?id=ru.a402d.rawbtprinter";
+
+const CLEANTER_PLAY_STORE =
+  "https://play.google.com/store/apps/details?id=id.cleancode.cleanter";
 
 export default function StrukModal({
   transaksi,
@@ -79,6 +87,14 @@ export default function StrukModal({
         setSaranRawBt(true);
         setPesan("RawBT sepertinya belum terpasang di HP ini.");
       }
+    });
+
+  const cetakLewatCleanter = () =>
+    jalankan("cleanter", async () => {
+      await cetakCleanter(susunStrukBlok(transaksi, pengaturan, { lebar }), {
+        paperWidth: lebar,
+        reference: transaksi.noTransaksi,
+      });
     });
 
   const unduh = () =>
@@ -169,6 +185,16 @@ export default function StrukModal({
 
             {mampu.android && (
               <button
+                onClick={cetakLewatCleanter}
+                disabled={busy !== null}
+                className={`${tombolKelas} border-green-700 bg-green-600 text-white hover:bg-green-500`}
+              >
+                {busy === "cleanter" ? "Mencetak..." : "Cetak via Cleanter"}
+              </button>
+            )}
+
+            {TAMPILKAN_RAWBT && mampu.android && (
+              <button
                 onClick={cetakLewatRawBt}
                 disabled={busy !== null}
                 className={`${tombolKelas} border-indigo-700 bg-indigo-600 text-white hover:bg-indigo-500`}
@@ -214,20 +240,31 @@ export default function StrukModal({
           {mampu.android && !mampu.usb && !mampu.bluetooth && (
             <div className="mt-3 rounded-xl bg-blue-50 px-3 py-2 text-[11px] leading-snug font-semibold text-warung-coklat/70">
               <p>
-                Di HP, cetak thermal pakai <b>RawBT</b>. Tombol <b>USB</b> &amp;{" "}
-                <b>Bluetooth</b> langsung hanya tersedia di laptop (batasan browser HP).
+                Di HP Android, cetak thermal pakai <b>Cleanter</b> — gratis,
+                tanpa watermark, cetak 1 tap. Install{" "}
+                <b>Cleanter: Thermal Printer BT</b>, pair printer di Bluetooth HP,
+                pilih printer di app Cleanter, lalu buka app ini di Chrome HP yang
+                sama.
               </p>
+              <a
+                href={CLEANTER_PLAY_STORE}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-1 inline-block text-warung-oranye underline"
+              >
+                Pasang Cleanter dari Play Store →
+              </a>
               <p className="mt-1">
-                Belum bisa cetak? Pastikan printer sudah <b>di-pair</b> di Bluetooth HP
-                lalu <b>dipilih</b> di app RawBT (Settings → Bluetooth printer).
+                Pertama kali cetak, Chrome bisa minta izin{" "}
+                <b>&quot;Apps on device&quot;</b> — pilih <b>Allow</b>.
               </p>
             </div>
           )}
 
           <p className="mt-3 text-[11px] leading-snug text-warung-coklat/60">
             Tips: kalau printer tidak muncul di &quot;Cetak / Simpan PDF&quot;,
-            pakai Tombol USB/Bluetooth (browser akan meminta pilih printer), atau
-            RawBT di Android, atau Download PNG lalu cetak dari app printer.
+            pakai tombol USB/Bluetooth (browser akan meminta pilih printer), atau
+            Cleanter di Android, atau Download PNG lalu cetak dari app printer.
           </p>
 
           <button
