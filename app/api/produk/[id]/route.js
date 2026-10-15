@@ -1,7 +1,8 @@
 import { prisma } from "@/lib/db";
 import { requireAuth, unauthorized } from "@/lib/api-auth";
 import { denganDb } from "@/lib/api-error";
-import { namaValid, fotoUrlValid, idFotoDariUrl } from "@/lib/validasi";
+import { namaValid, fotoUrlValid } from "@/lib/validasi";
+import { hapusFotoTakDipakai } from "@/lib/foto";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -85,10 +86,7 @@ if (satuan) data.satuan = satuan;
       include: { kategori: true },
     });
     if (fotoUrl !== undefined && lama.fotoUrl !== fotoUrl) {
-      const idLama = idFotoDariUrl(lama.fotoUrl);
-      if (idLama) {
-        await prisma.fotoProduk.deleteMany({ where: { id: idLama } });
-      }
+      await hapusFotoTakDipakai(lama.fotoUrl);
     }
     return Response.json(updated);
   } catch (e) {
@@ -118,10 +116,7 @@ try {
       select: { fotoUrl: true },
     });
     await prisma.produk.delete({ where: { id: produkId } });
-    const idFoto = idFotoDariUrl(produk?.fotoUrl);
-    if (idFoto) {
-      await prisma.fotoProduk.deleteMany({ where: { id: idFoto } });
-    }
+    await hapusFotoTakDipakai(produk?.fotoUrl);
     return Response.json({ ok: true });
   } catch (e) {
     if (e?.code === "P2003") {

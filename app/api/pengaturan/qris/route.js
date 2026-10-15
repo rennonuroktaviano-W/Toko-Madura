@@ -1,7 +1,8 @@
 import { prisma } from "@/lib/db";
 import { requireAuth, unauthorized } from "@/lib/api-auth";
 import { denganDb } from "@/lib/api-error";
-import { MAX_BYTES_FOTO, MIME_FOTO, idFotoDariUrl } from "@/lib/validasi";
+import { MAX_BYTES_FOTO, MIME_FOTO } from "@/lib/validasi";
+import { hapusFotoTakDipakai } from "@/lib/foto";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -65,10 +66,7 @@ export const POST = denganDb(async (request) => {
     select: { qrisUrl: true },
   });
 
-  const idLama = idFotoDariUrl(lama.qrisUrl);
-  if (idLama && idLama !== foto.id) {
-    await prisma.fotoProduk.deleteMany({ where: { id: idLama } });
-  }
+  await hapusFotoTakDipakai(lama.qrisUrl);
 
   return Response.json({ qrisUrl: updated.qrisUrl }, { status: 201 });
 }, "POST /api/pengaturan/qris");
@@ -85,10 +83,7 @@ export const DELETE = denganDb(async () => {
     select: { qrisUrl: true },
   });
 
-  const idLama = idFotoDariUrl(lama.qrisUrl);
-  if (idLama) {
-    await prisma.fotoProduk.deleteMany({ where: { id: idLama } });
-  }
+  await hapusFotoTakDipakai(lama.qrisUrl);
 
   return Response.json({ qrisUrl: updated.qrisUrl });
 }, "DELETE /api/pengaturan/qris");
