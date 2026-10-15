@@ -1,3 +1,4 @@
+import { prisma } from "@/lib/db";
 import { denganDb } from "@/lib/api-error";
 import { pelangganSekarang } from "@/lib/pelanggan";
 import {

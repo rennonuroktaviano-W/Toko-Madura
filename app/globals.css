@@ -25,3 +25,63 @@ body {
   background: var(--background);
   color: var(--foreground);
 }
+
+/* ===== Cetak struk ===== */
+.struk-cetak {
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+@media print {
+  body {
+    background: #fff !important;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  .struk-cetak,
+  .struk-cetak * {
+    visibility: visible !important;
+  }
+
+  .struk-overlay {
+    position: static !important;
+    background: none !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  .struk-kartu {
+    box-shadow: none !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: none !important;
+    width: auto !important;
+    background: #fff !important;
+  }
+
+  .struk-cetak {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: var(--lebar-struk, 58mm) !important;
+    margin: 0 auto !important;
+  }
+
+  .struk-cetak > * {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}
+
+@page {
+  margin: 0;
+}

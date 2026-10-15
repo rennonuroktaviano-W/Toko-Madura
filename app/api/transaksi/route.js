@@ -1,3 +1,4 @@
+import { prisma } from "@/lib/db";
 import { requireAuth, unauthorized } from "@/lib/api-auth";
 import { denganDb } from "@/lib/api-error";
 import { rentangHariWIB, tanggalValid } from "@/lib/wib";

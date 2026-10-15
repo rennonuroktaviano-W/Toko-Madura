@@ -1,108 +1,99 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toPng } from "html-to-image";
 import Struk from "./Struk";
+import { KERTAS, LEBAR_CETAK } from "@/lib/struk-teks";
+import {
+  bagikanPng,
+  cetakBluetooth,
+  cetakNative,
+  cetakRawBt,
+  cetakUsb,
+  deteksiKemampuan,
+  strukKeBytes,
+  unduhPng,
+} from "@/lib/print";
 
-const PAPER_WIDTHS = { 58: "50mm", 80: "72mm" };
-
-export default function StrukModal
-({
+export default function StrukModal({
   transaksi,
   pengaturan,
   onClose,
   buttonClose = "Transaksi Baru",
   title = "Struk Transaksi",
 }) {
+  const ref = useRef(null);
+  const [busy, setBusy] = useState(null);
+  const [lebar, setLebar] = useState(58);
+  const [pesan, setPesan] = useState("");
+  const [mampu, setMampu] = useState({
+    usb: false,
+    bluetooth: false,
+    share: false,
+    android: false,
+  });
+
+  useEffect(() => {
+    setMampu(deteksiKemampuan());
+  }, []);
+
   async function generatePng() {
-    return toPng(ref.current, {
-      pixelRatio: 2,
-      backgroundColor: "#ffffff",
+    if (!ref.current) throw new Error("Struk belum siap.");
+    return toPng(ref.current, { pixelRatio: 2, backgroundColor: "#ffffff" });
+  }
+
+  async function jalankan(nama, fn) {
+    if (busy) return;
+    setBusy(nama);
+    setPesan("");
+    try {
+      await fn();
+    } catch (e) {
+      setPesan(e?.message || "Gagal mencetak. Coba cara lain.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  const cetakDialog = () => jalankan("dialog", () => cetakNative(lebar));
+
+  const cetakUsbLangsung = () =>
+    jalankan("usb", async () => {
+      await cetakUsb(strukKeBytes(transaksi, pengaturan, lebar));
     });
-  }
 
-  async function handleDownload() {
-    if (!ref.current) return;
-    setBusy("download");
-    try {
-      const dataUrl = await generatePng();
-      const link = document.createElement("a");
-      link.download = `${transaksi.noTransaksi}.png`;
-      link.href = dataUrl;
-      link.click();
-    } catch {
-      window.alert("Gagal membuat gambar struk.");
-    } finally {
-      setBusy(null);
-    }
-  }
+  const cetakBluetoothLangsung = () =>
+    jalankan("bt", async () => {
+      await cetakBluetooth(strukKeBytes(transaksi, pengaturan, lebar));
+    });
 
-  async function handlePrint() {
-    if (!ref.current) return;
-    setBusy("print");
-    let iframe;
-    try {
-      const dataUrl = await generatePng();
-      const pw = getPrintWidth();
-      iframe = document.createElement("iframe");
-      Object.assign(iframe.style, {
-        position: "fixed",
-        left: "-9999px",
-        top: "0",
-        width: "412px",
-        height: "640px",
-        border: "0",
-      });
-      document.body.appendChild(iframe);
-      const win = iframe.contentWindow;
-      win.document.write(
-        `<!doctype html><html><head><style>` +
-          `*{margin:0;padding:0;box-sizing:border-box}` +
-          `body{display:flex;justify-content:center;padding:8px 0;margin:0}` +
-          `img{width:${pw};height:auto;max-width:100%}` +
-          `@page{margin:0}` +
-          `</style></head><body><img src="${dataUrl}" alt="Struk" /></body></html>`
-      );
-      win.document.close();
-      win.document.title = `Struk ${transaksi.noTransaksi}`;
-
-      let selesai = false;
-      const hapusIframe = () => {
-        if (selesai) return;
-        selesai = true;
-        win.onafterprint = null;
-        iframe.remove();
-      };
-
-      const cetak = () => {
-        win.focus();
-        win.onafterprint = hapusIframe;
-        win.print();
-        setTimeout(hapusIframe, 1000);
-      };
-
-      const img = win.document.querySelector("img");
-      if (img.complete && img.naturalWidth > 0) {
-        cetak();
-      } else {
-        img.onload = cetak;
-        img.onerror = () => {
-          window.alert("Gagal membuat gambar struk.");
-          hapusIframe();
-        };
+  const cetakLewatRawBt = () =>
+    jalankan("rawbt", async () => {
+      const terbuka = await cetakRawBt(strukKeBytes(transaksi, pengaturan, lebar));
+      if (!terbuka) {
+        setPesan(
+          "RawBT sepertinya belum terpasang. Pasang app RawBT, atau pakai Download PNG / Cetak biasa."
+        );
       }
-    } catch {
-      window.alert("Gagal mencetak struk.");
-      iframe?.remove();
-    } finally {
-      setBusy(null);
-    }
-  }
+    });
+
+  const unduh = () =>
+    jalankan("unduh", async () => {
+      unduhPng(await generatePng(), transaksi.noTransaksi);
+    });
+
+  const bagikan = () =>
+    jalankan("share", async () => {
+      await bagikanPng(await generatePng(), transaksi.noTransaksi);
+    });
+
+  const tombolKelas =
+    "rounded-xl border-b-4 px-4 py-3 text-sm font-extrabold transition active:border-b-0 active:translate-y-0.5 disabled:opacity-60";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/70 p-4">
-      <div className="my-6 w-full max-w-sm rounded-3xl bg-white p-4 shadow-2xl">
-        <div className="flex items-center justify-between">
+    <div className="struk-overlay fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/70 p-4">
+      <div className="struk-kartu my-6 w-full max-w-sm rounded-3xl bg-white p-4 shadow-2xl">
+        <div className="no-print flex items-center justify-between">
           <h2 className="font-display text-lg font-extrabold text-warung-coklat">
             {title}
           </h2>
@@ -115,33 +106,112 @@ export default function StrukModal
           </button>
         </div>
 
-        <div ref={ref} className="mt-3">
+        <div
+          ref={ref}
+          className="struk-cetak mt-3"
+          style={{ "--lebar-struk": KERTAS[lebar].css }}
+        >
           <Struk transaksi={transaksi} pengaturan={pengaturan} />
         </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-2">
+        <div className="no-print mt-4">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs font-bold text-warung-coklat">Lebar kertas</p>
+            <div className="flex gap-1">
+              {LEBAR_CETAK.map((k) => (
+                <button
+                  key={k.id}
+                  onClick={() => setLebar(k.id)}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-extrabold transition ${
+                    lebar === k.id
+                      ? "bg-warung-kuning text-warung-coklat ring-2 ring-warung-oranye"
+                      : "bg-warung-krem text-warung-coklat hover:bg-amber-100"
+                  }`}
+                >
+                  {k.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-3 grid gap-2">
+            <button
+              onClick={cetakDialog}
+              disabled={busy !== null}
+              className={`${tombolKelas} border-blue-700 bg-blue-600 text-white hover:bg-blue-500`}
+            >
+              {busy === "dialog" ? "Membuka dialog..." : "Cetak / Simpan PDF"}
+            </button>
+
+            {mampu.usb && (
+              <button
+                onClick={cetakUsbLangsung}
+                disabled={busy !== null}
+                className={`${tombolKelas} border-emerald-700 bg-emerald-600 text-white hover:bg-emerald-500`}
+              >
+                {busy === "usb" ? "Mencetak..." : "Printer Thermal USB"}
+              </button>
+            )}
+
+            {mampu.bluetooth && (
+              <button
+                onClick={cetakBluetoothLangsung}
+                disabled={busy !== null}
+                className={`${tombolKelas} border-teal-700 bg-teal-600 text-white hover:bg-teal-500`}
+              >
+                {busy === "bt" ? "Mencetak..." : "Printer Thermal Bluetooth"}
+              </button>
+            )}
+
+            {mampu.android && (
+              <button
+                onClick={cetakLewatRawBt}
+                disabled={busy !== null}
+                className={`${tombolKelas} border-indigo-700 bg-indigo-600 text-white hover:bg-indigo-500`}
+              >
+                {busy === "rawbt" ? "Mengirim ke RawBT..." : "Cetak via RawBT"}
+              </button>
+            )}
+
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={unduh}
+                disabled={busy !== null}
+                className={`${tombolKelas} border-purple-700 bg-purple-600 text-white hover:bg-purple-500`}
+              >
+                {busy === "unduh" ? "Menyiapkan..." : "Download PNG"}
+              </button>
+              {mampu.share && (
+                <button
+                  onClick={bagikan}
+                  disabled={busy !== null}
+                  className={`${tombolKelas} border-amber-700 bg-amber-600 text-white hover:bg-amber-500`}
+                >
+                  {busy === "share" ? "Menyiapkan..." : "Bagikan"}
+                </button>
+              )}
+            </div>
+          </div>
+
+          {pesan && (
+            <p className="mt-3 rounded-xl bg-amber-50 px-3 py-2 text-xs font-bold text-warung-coklat">
+              {pesan}
+            </p>
+          )}
+
+          <p className="mt-3 text-[11px] leading-snug text-warung-coklat/60">
+            Tips: kalau printer tidak muncul di &quot;Cetak / Simpan PDF&quot;,
+            pakai Tombol USB/Bluetooth (browser akan meminta pilih printer), atau
+            RawBT di Android, atau Download PNG lalu cetak dari app printer.
+          </p>
+
           <button
-            onClick={handlePrint}
-            disabled={busy !== null}
-            className="rounded-xl border-b-4 border-blue-700 bg-blue-600 px-4 py-3 font-extrabold text-white transition hover:bg-blue-500 active:border-b-0 active:translate-y-0.5 disabled:opacity-60"
+            onClick={onClose}
+            className="mt-3 w-full rounded-xl border-b-4 border-warung-kuningtua bg-warung-kuning px-4 py-3 font-extrabold text-warung-coklat transition hover:bg-amber-400 active:border-b-0 active:translate-y-0.5"
           >
-            {busy === "print" ? "Memproses..." : "Print"}
-          </button>
-          <button
-            onClick={handleDownload}
-            disabled={busy !== null}
-            className="rounded-xl border-b-4 border-purple-700 bg-purple-600 px-4 py-3 font-extrabold text-white transition hover:bg-purple-500 active:border-b-0 active:translate-y-0.5 disabled:opacity-60"
-          >
-            {busy === "download" ? "Memproses..." : "Download PNG"}
+            {buttonClose}
           </button>
         </div>
-
-        <button
-          onClick={onClose}
-          className="mt-3 w-full rounded-xl border-b-4 border-warung-kuningtua bg-warung-kuning px-4 py-3 font-extrabold text-warung-coklat transition hover:bg-amber-400 active:border-b-0 active:translate-y-0.5"
-        >
-          {buttonClose}
-        </button>
       </div>
     </div>
   );
