@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useApi } from "@/lib/use-api";
 import { useFlash } from "@/lib/use-flash";
 import { MAX_NAMA } from "@/lib/validasi";
@@ -10,12 +11,16 @@ const KOSONG = { namaToko: "", alamat: "", tagline: "" };
 
 export default function PengaturanPage() {
   const api = useApi();
+  const router = useRouter();
   const [form, setForm] = useState(KOSONG);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [belumSiap, setBelumSiap] = useState(false);
   const [pesanBelumSiap, setPesanBelumSiap] = useState("");
   const [salin, setSalin] = useState("");
+  const [qrisUrl, setQrisUrl] = useState(null);
+  const [qrisBusy, setQrisBusy] = useState(false);
+  const fileQrisRef = useRef(null);
   const [msg, flash] = useFlash(2500);
 
   const urlPesan =
@@ -32,6 +37,7 @@ export default function PengaturanPage() {
         alamat: data?.alamat ?? "",
         tagline: data?.tagline ?? "",
       });
+      setQrisUrl(data?.qrisUrl ?? null);
       setBelumSiap(false);
     } catch (e) {
       if (e.kode) {
@@ -96,6 +102,68 @@ export default function PengaturanPage() {
       setTimeout(() => setSalin(""), 2000);
     } else {
       flash("Tidak bisa menyalin otomatis. Salin manual dari kotak link.", "error");
+    }
+  }
+
+  function kosongkanFileQris() {
+    if (fileQrisRef.current) fileQrisRef.current.value = "";
+  }
+
+  async function handleUploadQris(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      flash("File harus berupa gambar JPG, PNG, atau WebP", "error");
+      kosongkanFileQris();
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      flash("Ukuran gambar maksimal 2 MB", "error");
+      kosongkanFileQris();
+      return;
+    }
+
+    setQrisBusy(true);
+    try {
+      const fd = new FormData();
+      fd.append("qris", file);
+      const res = await fetch("/api/pengaturan/qris", {
+        method: "POST",
+        body: fd,
+      });
+      if (res.status === 401) {
+        router.push("/login");
+        return;
+      }
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(data?.error || "Gagal mengunggah QRIS");
+      setQrisUrl(data.qrisUrl);
+      flash("QRIS berhasil diperbarui");
+    } catch (err) {
+      flash(err.message, "error");
+    } finally {
+      setQrisBusy(false);
+      kosongkanFileQris();
+    }
+  }
+
+  async function handleResetQris() {
+    if (!window.confirm("Kembalikan QRIS ke gambar default?")) return;
+    setQrisBusy(true);
+    try {
+      const res = await fetch("/api/pengaturan/qris", { method: "DELETE" });
+      if (res.status === 401) {
+        router.push("/login");
+        return;
+      }
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(data?.error || "Gagal mereset QRIS");
+      setQrisUrl(null);
+      flash("QRIS dikembalikan ke default");
+    } catch (err) {
+      flash(err.message, "error");
+    } finally {
+      setQrisBusy(false);
     }
   }
 
@@ -204,16 +272,17 @@ export default function PengaturanPage() {
             </button>
           </form>
 
-          <div className="space-y-4 rounded-2xl border-2 border-amber-100 bg-white p-5 shadow-sm">
-            <div>
-              <h2 className="font-display text-lg font-extrabold text-warung-coklat">
-                QR Pemesanan (Self Order)
-              </h2>
-              <p className="text-sm text-warung-coklat/60">
-                Cetak dan tempel di meja/kasir. Pelanggan scan QR ini lalu pesan
-                sendiri tanpa login.
-              </p>
-            </div>
+          <div className="space-y-4">
+            <div className="space-y-4 rounded-2xl border-2 border-amber-100 bg-white p-5 shadow-sm">
+              <div>
+                <h2 className="font-display text-lg font-extrabold text-warung-coklat">
+                  QR Pemesanan (Self Order)
+                </h2>
+                <p className="text-sm text-warung-coklat/60">
+                  Cetak dan tempel di meja/kasir. Pelanggan scan QR ini lalu pesan
+                  sendiri tanpa login.
+                </p>
+              </div>
 
             <div className="flex flex-col items-center gap-3">
               <div className="rounded-2xl border-2 border-amber-200 bg-white p-3">
@@ -261,6 +330,54 @@ export default function PengaturanPage() {
                 dicetak, pastikan sudah dibuka dari domain production.
               </p>
             </div>
+          </div>
+
+          <div className="space-y-4 rounded-2xl border-2 border-amber-100 bg-white p-5 shadow-sm">
+            <div>
+              <h2 className="font-display text-lg font-extrabold text-warung-coklat">
+                QRIS Pembayaran
+              </h2>
+              <p className="text-sm text-warung-coklat/60">
+                Gambar QRIS yang tampil saat pelanggan memilih bayar QRIS di
+                kasir dan di halaman pemesanan online.
+              </p>
+            </div>
+
+            <div className="flex flex-col items-center gap-3">
+              <div className="rounded-2xl border-2 border-amber-200 bg-white p-3">
+                <img
+                  src={qrisUrl || "/qris.png"}
+                  alt="QRIS"
+                  width={220}
+                  height={220}
+                  className="h-[220px] w-[220px] object-contain"
+                />
+              </div>
+
+              <input
+                ref={fileQrisRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={handleUploadQris}
+                disabled={qrisBusy}
+                className="block w-full text-xs text-warung-coklat file:mr-3 file:rounded-lg file:border-0 file:bg-warung-kuning file:px-3 file:py-2 file:text-xs file:font-extrabold file:text-warung-coklat hover:file:bg-amber-400"
+              />
+              <p className="text-center text-xs text-warung-coklat/60">
+                {qrisBusy
+                  ? "Memproses..."
+                  : "JPG/PNG/WebP, maksimal 2 MB. Menggantikan QRIS bawaan."}
+              </p>
+
+              <button
+                type="button"
+                onClick={handleResetQris}
+                disabled={qrisBusy || !qrisUrl}
+                className="w-full rounded-xl bg-warung-krem px-4 py-2.5 text-sm font-bold text-warung-coklat transition hover:bg-amber-100 disabled:opacity-50"
+              >
+                Reset ke Default
+              </button>
+            </div>
+          </div>
           </div>
         </div>
       )}

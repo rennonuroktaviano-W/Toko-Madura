@@ -12,6 +12,7 @@ async function ambilToko() {
     namaToko: pengaturan?.namaToko || "Warung Madura",
     tagline: pengaturan?.tagline || "Kasir 24 Jam",
     alamat: pengaturan?.alamat || "",
+    qrisUrl: pengaturan?.qrisUrl || null,
   };
 }
 

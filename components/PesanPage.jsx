@@ -262,7 +262,7 @@ export default function PesanPage({ toko }) {
                 Scan QRIS di kasir untuk bayar {rupiah(sukses.grandTotal)}
               </p>
               <Image
-                src="/qris.png"
+                src={toko.qrisUrl || "/qris.png"}
                 alt="QRIS"
                 width={752}
                 height={752}

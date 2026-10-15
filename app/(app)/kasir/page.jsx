@@ -29,6 +29,7 @@ function CartPanel({
   hapusSemua,
   onSubmit,
   onPerbesarQR,
+  qrisUrl,
   processing,
   error,
   setError,
@@ -221,7 +222,7 @@ function CartPanel({
                   className="mx-auto block w-full max-w-[200px] rounded-lg bg-white p-1 transition hover:bg-blue-100"
                 >
                   <Image
-                    src="/qris.png"
+                    src={qrisUrl || "/qris.png"}
                     alt="QRIS"
                     width={752}
                     height={752}
@@ -261,14 +262,14 @@ function CartPanel({
   );
 }
 
-function QrisZoom({ onTutup }) {
+function QrisZoom({ onTutup, qrisUrl }) {
   return (
     <div
       onClick={onTutup}
       className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-black/85 p-6"
     >
       <Image
-        src="/qris.png"
+        src={qrisUrl || "/qris.png"}
         alt="QRIS"
         width={752}
         height={752}
@@ -639,6 +640,7 @@ export default function KasirPage() {
             hapusSemua={hapusSemua}
             onSubmit={selesaikan}
             onPerbesarQR={() => setQrisZoom(true)}
+            qrisUrl={pengaturan?.qrisUrl}
             processing={processing}
             error={error}
             setError={setError}
@@ -677,6 +679,7 @@ export default function KasirPage() {
               hapusSemua={hapusSemua}
               onSubmit={selesaikan}
               onPerbesarQR={() => setQrisZoom(true)}
+              qrisUrl={pengaturan?.qrisUrl}
               processing={processing}
               error={error}
               setError={setError}
@@ -693,7 +696,7 @@ export default function KasirPage() {
       )}
 
       {qrisZoom && (
-        <QrisZoom onTutup={() => setQrisZoom(false)} />
+        <QrisZoom onTutup={() => setQrisZoom(false)} qrisUrl={pengaturan?.qrisUrl} />
       )}
 
       {struk && (
