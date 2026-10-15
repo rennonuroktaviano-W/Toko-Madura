@@ -17,16 +17,10 @@ export default function PengaturanPage() {
   const [saving, setSaving] = useState(false);
   const [belumSiap, setBelumSiap] = useState(false);
   const [pesanBelumSiap, setPesanBelumSiap] = useState("");
-  const [salin, setSalin] = useState("");
   const [qrisUrl, setQrisUrl] = useState(null);
   const [qrisBusy, setQrisBusy] = useState(false);
   const fileQrisRef = useRef(null);
   const [msg, flash] = useFlash(2500);
-
-  const urlPesan =
-    typeof window === "undefined"
-      ? "/pesan"
-      : `${window.location.origin}/pesan`;
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -66,42 +60,6 @@ export default function PengaturanPage() {
       flash(err.message, "error");
     } finally {
       setSaving(false);
-    }
-  }
-
-  async function salinTeks(teks) {
-    if (typeof navigator !== "undefined" && navigator.clipboard) {
-      try {
-        await navigator.clipboard.writeText(teks);
-        return true;
-      } catch {}
-    }
-
-    try {
-      const area = document.createElement("textarea");
-      area.value = teks;
-      area.setAttribute("readonly", "");
-      area.style.position = "fixed";
-      area.style.top = "-1000px";
-      area.style.opacity = "0";
-      document.body.appendChild(area);
-      area.select();
-      area.setSelectionRange(0, area.value.length);
-      const berhasil = document.execCommand("copy");
-      document.body.removeChild(area);
-      return berhasil;
-    } catch {
-      return false;
-    }
-  }
-
-  async function salinLink() {
-    const berhasil = await salinTeks(urlPesan);
-    if (berhasil) {
-      setSalin("Tersalin");
-      setTimeout(() => setSalin(""), 2000);
-    } else {
-      flash("Tidak bisa menyalin otomatis. Salin manual dari kotak link.", "error");
     }
   }
 
@@ -179,8 +137,7 @@ export default function PengaturanPage() {
         Pengaturan Toko
       </h1>
       <p className="text-sm text-warung-coklat/60">
-        Nama toko dan lokasi dipakai di kasir, struk, dan halaman pemesanan
-        pelanggan.
+        Nama toko dan lokasi dipakai di kasir dan struk.
       </p>
 
       {msg && (
@@ -221,7 +178,7 @@ export default function PengaturanPage() {
                 required
               />
               <p className="mt-1 text-xs text-warung-coklat/60">
-                Tampil di menu kasir, struk, dan halaman pemesanan.
+                Tampil di menu kasir dan struk.
               </p>
             </div>
 
@@ -276,72 +233,13 @@ export default function PengaturanPage() {
             <div className="space-y-4 rounded-2xl border-2 border-amber-100 bg-white p-5 shadow-sm">
               <div>
                 <h2 className="font-display text-lg font-extrabold text-warung-coklat">
-                  QR Pemesanan (Self Order)
+                  QRIS Pembayaran
                 </h2>
                 <p className="text-sm text-warung-coklat/60">
-                  Cetak dan tempel di meja/kasir. Pelanggan scan QR ini lalu pesan
-                  sendiri tanpa login.
+                  Gambar QRIS yang tampil saat pelanggan memilih bayar QRIS di
+                  kasir.
                 </p>
               </div>
-
-            <div className="flex flex-col items-center gap-3">
-              <div className="rounded-2xl border-2 border-amber-200 bg-white p-3">
-                <img
-                  src="/api/pengaturan/qr"
-                  alt="QR halaman pemesanan"
-                  width={220}
-                  height={220}
-                  className="h-[220px] w-[220px]"
-                />
-              </div>
-
-              <div className="w-full">
-                <p className="mb-1 text-xs font-bold text-warung-coklat/60">
-                  Link pemesanan
-                </p>
-                <input
-                  readOnly
-                  value={urlPesan}
-                  onFocus={(e) => e.target.select()}
-                  className="w-full rounded-xl border-2 border-amber-200 bg-warung-krem px-4 py-2.5 text-sm font-bold text-warung-coklat outline-none"
-                />
-              </div>
-
-              <div className="flex w-full gap-2">
-                <button
-                  type="button"
-                  onClick={salinLink}
-                  className="flex-1 rounded-xl bg-warung-krem px-4 py-2.5 text-sm font-bold text-warung-coklat transition hover:bg-amber-100"
-                >
-                  {salin || "Salin Link"}
-                </button>
-                <a
-                  href="/pesan"
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  className="flex-1 rounded-xl border-b-4 border-warung-kuningtua bg-warung-kuning px-4 py-2 text-center text-sm font-extrabold text-warung-coklat transition hover:bg-amber-400 active:border-b-0"
-                >
-                  Buka Halaman
-                </a>
-              </div>
-
-              <p className="text-center text-xs text-warung-coklat/60">
-                QR dan link memakai alamat situs yang sedang dibuka. Sebelum
-                dicetak, pastikan sudah dibuka dari domain production.
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-4 rounded-2xl border-2 border-amber-100 bg-white p-5 shadow-sm">
-            <div>
-              <h2 className="font-display text-lg font-extrabold text-warung-coklat">
-                QRIS Pembayaran
-              </h2>
-              <p className="text-sm text-warung-coklat/60">
-                Gambar QRIS yang tampil saat pelanggan memilih bayar QRIS di
-                kasir dan di halaman pemesanan online.
-              </p>
-            </div>
 
             <div className="flex flex-col items-center gap-3">
               <div className="rounded-2xl border-2 border-amber-200 bg-white p-3">

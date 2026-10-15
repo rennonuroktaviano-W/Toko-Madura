@@ -27,7 +27,7 @@ export const GET = denganDb(async (request) => {
     where.tanggal = { ...(where.tanggal || {}), lt: rentangHariWIB(sampai).lt };
   }
 
-  const [transaksis, agregat, menunggu] = await Promise.all([
+  const [transaksis, agregat] = await Promise.all([
     prisma.transaksi.findMany({
       where,
       include: {
@@ -42,7 +42,6 @@ export const GET = denganDb(async (request) => {
       _count: { _all: true },
       _sum: { grandTotal: true },
     }),
-    prisma.transaksi.count({ where: { ...where, status: "MenungguPembayaran" } }),
   ]);
 
   const jumlah = agregat._count._all;
@@ -51,8 +50,7 @@ export const GET = denganDb(async (request) => {
     ringkasan: {
       omzet: agregat._sum.grandTotal ?? 0,
       jumlah,
-      menunggu,
-      terpotong: jumlah + menunggu > transaksis.length,
+      terpotong: jumlah > transaksis.length,
     },
   });
 }, "GET /api/transaksi");
@@ -75,7 +73,6 @@ export const POST = denganDb(async (request) => {
       metodeBayar: body?.metodeBayar === "QRIS" ? "QRIS" : "Tunai",
       jumlahBayar: Number(body?.jumlahBayar),
       kasirId: Number(user.sub),
-      awalanNo: "TRX",
       requestId,
     });
 

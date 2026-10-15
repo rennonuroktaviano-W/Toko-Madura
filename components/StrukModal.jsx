@@ -24,7 +24,6 @@ export default function StrukModal({
   onClose,
   buttonClose = "Transaksi Baru",
   title = "Struk Transaksi",
-  footer = null,
 }) {
   const ref = useRef(null);
   const [busy, setBusy] = useState(null);
@@ -237,8 +236,6 @@ export default function StrukModal({
           >
             {buttonClose}
           </button>
-
-          {footer}
         </div>
       </div>
     </div>

@@ -27,7 +27,6 @@ export const GET = denganDb(async () => {
     barangTerlaris,
     stokMenipis,
     transaksi7Hari,
-    pesananMenunggu,
   ] =
     await Promise.all([
       prisma.transaksi.aggregate({
@@ -64,7 +63,6 @@ export const GET = denganDb(async () => {
         where: { ...sudahBayar, tanggal: { gte: mulai7Hari, lt: endHariIni } },
         select: { tanggal: true, grandTotal: true },
       }),
-      prisma.transaksi.count({ where: { status: "MenungguPembayaran" } }),
     ]);
 
   const omzetPerHari = new Map();
@@ -93,7 +91,6 @@ export const GET = denganDb(async () => {
     jmlItemHariIni: jmlItemHariIni._sum.jumlahItem ?? 0,
     omzetTotal: omzetTotal._sum.grandTotal ?? 0,
     jmlTrxTotal,
-    pesananMenunggu,
     produkAktif,
     barangTerlaris: barangTerlaris.map((b) => ({
       nama: b.nama,

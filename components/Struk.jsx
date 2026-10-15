@@ -10,8 +10,6 @@ function GarisDashed() {
 
 export default function Struk({ transaksi, pengaturan }) {
   const waktu = formatTanggalWaktu(transaksi.tanggal);
-  const orderDaring = transaksi.sumber === "Order";
-  const belumBayar = transaksi.status === "MenungguPembayaran";
 
   return (
     <div className="mx-auto w-[300px] bg-white px-4 py-3 font-mono text-[13px] leading-snug text-black">
@@ -35,10 +33,8 @@ export default function Struk({ transaksi, pengaturan }) {
           <span className="font-bold">Tgl:</span> {waktu}
         </p>
         <p>
-          <span className="font-bold">
-            {orderDaring ? "Pesanan" : "Kasir"}:
-          </span>{" "}
-          {orderDaring ? "Online (self order)" : transaksi.kasir?.nama || "-"}
+          <span className="font-bold">Kasir:</span>{" "}
+          {transaksi.kasir?.nama || "-"}
         </p>
       </div>
 
@@ -77,34 +73,21 @@ export default function Struk({ transaksi, pengaturan }) {
           <span>{rp(transaksi.grandTotal)}</span>
         </p>
         <GarisDashed />
-        {belumBayar ? (
-          <p className="text-center font-bold uppercase tracking-tight">
-            Menunggu pembayaran
+        <p className="flex justify-between">
+          <span>Bayar ({transaksi.metodeBayar})</span>
+          <span>{rp(transaksi.jumlahBayar)}</span>
+        </p>
+        {transaksi.metodeBayar === "Tunai" && (
+          <p className="flex justify-between">
+            <span>Kembalian</span>
+            <span>{rp(transaksi.kembalian)}</span>
           </p>
-        ) : (
-          <>
-            <p className="flex justify-between">
-              <span>Bayar ({transaksi.metodeBayar})</span>
-              <span>{rp(transaksi.jumlahBayar)}</span>
-            </p>
-            {transaksi.metodeBayar === "Tunai" && (
-              <p className="flex justify-between">
-                <span>Kembalian</span>
-                <span>{rp(transaksi.kembalian)}</span>
-              </p>
-            )}
-          </>
         )}
       </div>
 
       <GarisDashed />
 
       <div className="text-center">
-        {orderDaring && (
-          <p className="mb-1 text-[10px] text-gray-600">
-            Bayar di toko dengan QRIS, sebutkan nomor pesanan
-          </p>
-        )}
         <p className="font-bold">~ Terima Kasih ~</p>
         <p className="text-[10px] text-gray-500">Powered by Kasir Warung Madura</p>
       </div>

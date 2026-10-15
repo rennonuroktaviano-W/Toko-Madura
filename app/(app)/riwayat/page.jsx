@@ -110,11 +110,6 @@ export default function RiwayatPage() {
           <p className="text-xs font-semibold text-warung-coklat/60">
             {ringkasan.jumlah} transaksi
           </p>
-          {ringkasan.menunggu > 0 && (
-            <p className="text-xs font-semibold text-amber-600">
-              {ringkasan.menunggu} pesanan menunggu pembayaran
-            </p>
-          )}
         </div>
       </div>
 
@@ -152,24 +147,12 @@ export default function RiwayatPage() {
                   {t.noTransaksi}
                 </p>
                 <p className="text-xs font-semibold text-warung-coklat/50">
-                  {formatTanggalWaktu(t.tanggal)} •{" "}
-                  {t.sumber === "Order" ? "Pesanan Online" : `Kasir: ${t.kasir?.nama}`}
+                  {formatTanggalWaktu(t.tanggal)} • Kasir: {t.kasir?.nama || "-"}
                 </p>
                 <div className="mt-1 flex flex-wrap gap-1">
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-[11px] font-extrabold ${
-                      t.status === "MenungguPembayaran"
-                        ? "bg-amber-100 text-amber-700"
-                        : "bg-green-100 text-warung-hijau"
-                    }`}
-                  >
-                    {t.status === "MenungguPembayaran" ? "Menunggu Bayar" : "Lunas"}
+                  <span className="rounded-full bg-green-100 px-2 py-0.5 text-[11px] font-extrabold text-warung-hijau">
+                    Lunas
                   </span>
-                  {t.sumber === "Order" && (
-                    <span className="rounded-full bg-purple-100 text-purple-700 px-2 py-0.5 text-[11px] font-extrabold">
-                      Self Order
-                    </span>
-                  )}
                 </div>
               </div>
               <div className="text-sm font-bold text-warung-coklat/70">
