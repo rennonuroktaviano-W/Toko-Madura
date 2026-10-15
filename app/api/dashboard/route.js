@@ -49,6 +49,7 @@ export const GET = denganDb(async () => {
       prisma.produk.count({ where: { status: "aktif" } }),
       prisma.itemTransaksi.groupBy({
         by: ["nama"],
+        where: { transaksi: { status: "Selesai" } },
         _sum: { qty: true, subtotal: true },
         orderBy: { _sum: { qty: "desc" } },
         take: 5,

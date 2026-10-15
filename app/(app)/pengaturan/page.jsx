@@ -63,12 +63,38 @@ export default function PengaturanPage() {
     }
   }
 
-  async function salinLink() {
+  async function salinTeks(teks) {
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      try {
+        await navigator.clipboard.writeText(teks);
+        return true;
+      } catch {}
+    }
+
     try {
-      await navigator.clipboard.writeText(urlPesan);
+      const area = document.createElement("textarea");
+      area.value = teks;
+      area.setAttribute("readonly", "");
+      area.style.position = "fixed";
+      area.style.top = "-1000px";
+      area.style.opacity = "0";
+      document.body.appendChild(area);
+      area.select();
+      area.setSelectionRange(0, area.value.length);
+      const berhasil = document.execCommand("copy");
+      document.body.removeChild(area);
+      return berhasil;
+    } catch {
+      return false;
+    }
+  }
+
+  async function salinLink() {
+    const berhasil = await salinTeks(urlPesan);
+    if (berhasil) {
       setSalin("Tersalin");
       setTimeout(() => setSalin(""), 2000);
-    } catch {
+    } else {
       flash("Tidak bisa menyalin otomatis. Salin manual dari kotak link.", "error");
     }
   }

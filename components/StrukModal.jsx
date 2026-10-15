@@ -15,17 +15,22 @@ import {
   unduhPng,
 } from "@/lib/print";
 
+const RAWBT_PLAY_STORE =
+  "https://play.google.com/store/apps/details?id=ru.a402d.rawbtprinter";
+
 export default function StrukModal({
   transaksi,
   pengaturan,
   onClose,
   buttonClose = "Transaksi Baru",
   title = "Struk Transaksi",
+  footer = null,
 }) {
   const ref = useRef(null);
   const [busy, setBusy] = useState(null);
   const [lebar, setLebar] = useState(58);
   const [pesan, setPesan] = useState("");
+  const [saranRawBt, setSaranRawBt] = useState(false);
   const [mampu, setMampu] = useState({
     usb: false,
     bluetooth: false,
@@ -46,6 +51,7 @@ export default function StrukModal({
     if (busy) return;
     setBusy(nama);
     setPesan("");
+    setSaranRawBt(false);
     try {
       await fn();
     } catch (e) {
@@ -71,9 +77,8 @@ export default function StrukModal({
     jalankan("rawbt", async () => {
       const terbuka = await cetakRawBt(strukKeBytes(transaksi, pengaturan, lebar));
       if (!terbuka) {
-        setPesan(
-          "RawBT sepertinya belum terpasang. Pasang app RawBT, atau pakai Download PNG / Cetak biasa."
-        );
+        setSaranRawBt(true);
+        setPesan("RawBT sepertinya belum terpasang di HP ini.");
       }
     });
 
@@ -181,22 +186,43 @@ export default function StrukModal({
               >
                 {busy === "unduh" ? "Menyiapkan..." : "Download PNG"}
               </button>
-              {mampu.share && (
-                <button
-                  onClick={bagikan}
-                  disabled={busy !== null}
-                  className={`${tombolKelas} border-amber-700 bg-amber-600 text-white hover:bg-amber-500`}
-                >
-                  {busy === "share" ? "Menyiapkan..." : "Bagikan"}
-                </button>
-              )}
+              <button
+                onClick={bagikan}
+                disabled={busy !== null}
+                className={`${tombolKelas} border-amber-700 bg-amber-600 text-white hover:bg-amber-500`}
+              >
+                {busy === "share" ? "Menyiapkan..." : "Bagikan"}
+              </button>
             </div>
           </div>
 
           {pesan && (
-            <p className="mt-3 rounded-xl bg-amber-50 px-3 py-2 text-xs font-bold text-warung-coklat">
-              {pesan}
-            </p>
+            <div className="mt-3 rounded-xl bg-amber-50 px-3 py-2 text-xs font-bold text-warung-coklat">
+              <p>{pesan}</p>
+              {saranRawBt && (
+                <a
+                  href={RAWBT_PLAY_STORE}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-1 inline-block text-warung-oranye underline"
+                >
+                  Pasang RawBT dari Play Store →
+                </a>
+              )}
+            </div>
+          )}
+
+          {mampu.android && !mampu.usb && !mampu.bluetooth && (
+            <div className="mt-3 rounded-xl bg-blue-50 px-3 py-2 text-[11px] leading-snug font-semibold text-warung-coklat/70">
+              <p>
+                Di HP, cetak thermal pakai <b>RawBT</b>. Tombol <b>USB</b> &amp;{" "}
+                <b>Bluetooth</b> langsung hanya tersedia di laptop (batasan browser HP).
+              </p>
+              <p className="mt-1">
+                Belum bisa cetak? Pastikan printer sudah <b>di-pair</b> di Bluetooth HP
+                lalu <b>dipilih</b> di app RawBT (Settings → Bluetooth printer).
+              </p>
+            </div>
           )}
 
           <p className="mt-3 text-[11px] leading-snug text-warung-coklat/60">
@@ -211,6 +237,8 @@ export default function StrukModal({
           >
             {buttonClose}
           </button>
+
+          {footer}
         </div>
       </div>
     </div>

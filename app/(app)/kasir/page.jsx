@@ -6,6 +6,7 @@ import { rupiah } from "@/lib/format";
 import { useApi } from "@/lib/use-api";
 import { useFlash } from "@/lib/use-flash";
 import { MAX_CATATAN } from "@/lib/validasi";
+import { buatId } from "@/lib/id";
 import FilterKategori from "@/components/FilterKategori";
 import StokBadge from "@/components/StokBadge";
 import FotoProduk from "@/components/FotoProduk";
@@ -473,7 +474,7 @@ export default function KasirPage() {
     }
 
     if (!requestIdRef.current) {
-      requestIdRef.current = crypto.randomUUID();
+      requestIdRef.current = buatId();
     }
 
     const currentRequestId = requestIdRef.current;

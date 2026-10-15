@@ -42,7 +42,9 @@ export default function NavBar() {
   }
 
   async function handleLogout() {
-    await fetch("/api/logout", { method: "POST" });
+    try {
+      await fetch("/api/logout", { method: "POST" });
+    } catch {}
     router.replace("/login");
   }
 

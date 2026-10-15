@@ -6,6 +6,7 @@ import { formatTanggalWaktu, rupiah } from "@/lib/format";
 import StokBadge from "@/components/StokBadge";
 import Struk from "@/components/Struk";
 import FotoProduk from "@/components/FotoProduk";
+import { buatId } from "@/lib/id";
 
 const TIMEOUT_MS = 15000;
 
@@ -169,7 +170,7 @@ export default function PesanPage({ toko }) {
     }
     setSending(true);
     if (!requestIdRef.current) {
-      requestIdRef.current = crypto.randomUUID();
+      requestIdRef.current = buatId();
     }
     const idToSend = requestIdRef.current;
     try {
@@ -350,7 +351,11 @@ export default function PesanPage({ toko }) {
                     className="flex min-w-0 flex-col overflow-hidden rounded-2xl border-2 border-amber-100 bg-white text-left shadow-sm transition active:scale-[0.99]"
                   >
                     <div className="aspect-square w-full overflow-hidden bg-amber-50">
-                      <FotoProduk produk={p} />
+                      <FotoProduk
+                        fotoUrl={p.fotoUrl}
+                        nama={p.nama}
+                        className="h-full w-full"
+                      />
                     </div>
                     <div className="flex flex-1 flex-col p-3">
                       <span
@@ -489,7 +494,7 @@ export default function PesanPage({ toko }) {
                         className="shrink-0 text-warung-merah"
                         title="Hapus"
                       >
-                        âœ•
+                        ✕
                       </button>
                     </div>
                     <div className="mt-2 flex items-center justify-between gap-3">
@@ -498,7 +503,7 @@ export default function PesanPage({ toko }) {
                           onClick={() => dec(c.produkId)}
                           className="flex h-8 w-8 items-center justify-center rounded-lg bg-warung-krem font-extrabold text-warung-coklat"
                         >
-                          âˆ’
+                          −
                         </button>
                         <span className="w-8 text-center font-extrabold text-warung-coklat">
                           {c.qty}

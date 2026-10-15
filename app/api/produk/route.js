@@ -76,6 +76,9 @@ const fotoUrl = body?.fotoUrl ? String(body.fotoUrl).trim() : null;
   if (!Number.isFinite(harga) || harga < 0) {
     return Response.json({ error: "Harga tidak valid" }, { status: 400 });
   }
+  if (!Number.isFinite(stok) || stok < 0) {
+    return Response.json({ error: "Stok tidak valid" }, { status: 400 });
+  }
 
   const kategori = await prisma.kategori.findUnique({ where: { id: kategoriId } });
   if (!kategori) {

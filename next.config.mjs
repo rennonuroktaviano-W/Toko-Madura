@@ -16,6 +16,7 @@ if (process.env.NODE_ENV === "production") {
 }
 
 const nextConfig = {
+  allowedDevOrigins: ["192.168.110.185", "192.168.110.*"],
   poweredByHeader: false,
   images: {
     unoptimized: true,
