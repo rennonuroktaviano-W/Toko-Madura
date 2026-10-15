@@ -8,7 +8,6 @@ import {
   bagikanPng,
   cetakBluetooth,
   cetakNative,
-  cetakRawBt,
   cetakUsb,
   deteksiKemampuan,
   strukKeBytes,
@@ -16,12 +15,6 @@ import {
 } from "@/lib/print";
 import { cetakCleanter } from "@/lib/cleanter";
 import { susunStrukBlok } from "@/lib/struk-blok";
-
-// RawBT disembunyikan sementara (diuji dulu pakai Cleanter). Set true untuk munculkan lagi.
-const TAMPILKAN_RAWBT = false;
-
-const RAWBT_PLAY_STORE =
-  "https://play.google.com/store/apps/details?id=ru.a402d.rawbtprinter";
 
 const CLEANTER_PLAY_STORE =
   "https://play.google.com/store/apps/details?id=id.cleancode.cleanter";
@@ -37,7 +30,6 @@ export default function StrukModal({
   const [busy, setBusy] = useState(null);
   const [lebar, setLebar] = useState(58);
   const [pesan, setPesan] = useState("");
-  const [saranRawBt, setSaranRawBt] = useState(false);
   const [mampu, setMampu] = useState({
     usb: false,
     bluetooth: false,
@@ -58,7 +50,6 @@ export default function StrukModal({
     if (busy) return;
     setBusy(nama);
     setPesan("");
-    setSaranRawBt(false);
     try {
       await fn();
     } catch (e) {
@@ -78,15 +69,6 @@ export default function StrukModal({
   const cetakBluetoothLangsung = () =>
     jalankan("bt", async () => {
       await cetakBluetooth(strukKeBytes(transaksi, pengaturan, lebar));
-    });
-
-  const cetakLewatRawBt = () =>
-    jalankan("rawbt", async () => {
-      const terbuka = await cetakRawBt(strukKeBytes(transaksi, pengaturan, lebar));
-      if (!terbuka) {
-        setSaranRawBt(true);
-        setPesan("RawBT sepertinya belum terpasang di HP ini.");
-      }
     });
 
   const cetakLewatCleanter = () =>
@@ -193,16 +175,6 @@ export default function StrukModal({
               </button>
             )}
 
-            {TAMPILKAN_RAWBT && mampu.android && (
-              <button
-                onClick={cetakLewatRawBt}
-                disabled={busy !== null}
-                className={`${tombolKelas} border-indigo-700 bg-indigo-600 text-white hover:bg-indigo-500`}
-              >
-                {busy === "rawbt" ? "Mengirim ke RawBT..." : "Cetak via RawBT"}
-              </button>
-            )}
-
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={unduh}
@@ -224,16 +196,6 @@ export default function StrukModal({
           {pesan && (
             <div className="mt-3 rounded-xl bg-amber-50 px-3 py-2 text-xs font-bold text-warung-coklat">
               <p>{pesan}</p>
-              {saranRawBt && (
-                <a
-                  href={RAWBT_PLAY_STORE}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-1 inline-block text-warung-oranye underline"
-                >
-                  Pasang RawBT dari Play Store →
-                </a>
-              )}
             </div>
           )}
 
